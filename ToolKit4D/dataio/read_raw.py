@@ -35,7 +35,7 @@ def read_raw(imname, imsize, imtype, big_endian=False,
     # Reshape the array to the specified size
     # Also do the transpose: so the slice of third dimension is orthognal
     # to 'column'; the same as Matlab result
-    imraw = imraw.reshape(imsize).transpose((2, 1, 0))
+    imraw = imraw.reshape(imsize, order='F')
 
     # Transpose if required; exchange x and y dimension
     if transposeflag:
