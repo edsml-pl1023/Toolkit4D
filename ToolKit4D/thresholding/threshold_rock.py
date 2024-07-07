@@ -12,7 +12,8 @@ def threshold_rock(raw_file, nbins=256):
             e.g ./tests/test_data/LA2_d0_v1_uint16_unnormalized_254_254_254.raw
         clean_path (str): basename of raw_file
         file_name (str): (raw_file - basename); file_name[0]: without extension
-        nbins (int): decide histogram precision; larger takes longer time to calculate
+        nbins (int): decide histogram precision; larger takes longer
+        time to calculate
     """
 
     clean_path = os.path.basename(raw_file)
