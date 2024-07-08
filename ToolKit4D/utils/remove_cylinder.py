@@ -8,7 +8,7 @@ def remove_cylinder(img, ring_rad, ring_frac):
 
     Args:
         img (array): A thresholded binary 3D image; note: this image
-                     directly after thresholding may be ndtype: bool    
+                     directly after thresholding may be ndtype: bool
         ring_rad: inner radius of circle of any 3D image
                   slice at z direction (in pixels)
         ring_frac: ratio between the outer radius and inner radius
@@ -18,14 +18,15 @@ def remove_cylinder(img, ring_rad, ring_frac):
     outer_radius = round(ring_rad * ring_frac)
 
     # Sample more slices for evaluation
-    num_samples = 5
+    num_samples = 10
     slices = np.linspace(0.3, 0.6, num_samples)
     positions = []
     radii = []
 
     for frac in slices:
         slice_idx = round(img.shape[2] * frac)
-        pos, radius = detect_ring(img[:, :, slice_idx], inner_radius, outer_radius)
+        pos, radius = detect_ring(img[:, :, slice_idx], inner_radius,
+                                  outer_radius)
         if radius == -1:
             raise ValueError(f"circle not found at slice: {slice_idx}")
         elif radius == -2:
@@ -65,7 +66,7 @@ def remove_cylinder(img, ring_rad, ring_frac):
     # Loop through masking
     mask_siz = [img.shape[0], img.shape[1]]
     for i in range(img.shape[2]):
-        slice_mask = create_mask(mask_siz, ring_centres[i], 97)
+        slice_mask = create_mask(mask_siz, ring_centres[i], ring_rad)
         img[:, :, i] = np.logical_and(img[:, :, i], slice_mask)
     return img
 
@@ -83,13 +84,19 @@ def detect_ring(slice, inner_radius, outer_radius):
                                            circle at the slice
     """
     slice_fill = binary_fill_holes(slice).astype(np.uint8) * 255
+
+    # blurred = cv2.GaussianBlur(slice_fill, (9, 9), 2)
+    # Apply Canny Edge Detection
+    # edges = cv2.Canny(blurred, 50, 150)
+    edges = cv2.Canny(slice_fill, 50, 150)
+
     circles = cv2.HoughCircles(
-        slice_fill,
+        edges,
         cv2.HOUGH_GRADIENT,
         dp=1,
-        minDist=outer_radius-inner_radius,
-        param1=200,  # edge thresh; my edge close to 255
-        param2=17,  # higher: more accurate but fewer circles
+        minDist=2*inner_radius,
+        param1=100,  # edge thresh; my edge close to 255
+        param2=18,  # higher: more accurate but fewer circles
         minRadius=inner_radius,
         maxRadius=outer_radius
     )
@@ -101,10 +108,10 @@ def detect_ring(slice, inner_radius, outer_radius):
         circle = circles[0][0]  # Take the first detected circle
         pos = np.array([circle[0], circle[1]])  # (x, y) position
         radius = circle[2]
-        # print(
-        #     f'Detected one circle: center (x={circle[0]}, y={circle[1]}) '
-        #     f'with radius: {circle[2]}'
-        # )
+        print(
+            f'Detected one circle: center (x={circle[0]}, y={circle[1]}) '
+            f'with radius: {circle[2]}'
+        )
     else:
         print(f'More than one ring detected: {len(circles[0])} rings')
         pos = np.array([-2, -2])
@@ -125,10 +132,17 @@ def create_mask(mask_siz, centre, radius):
     Returns:
     numpy.ndarray: Circular mask.
     """
-    xx, yy = np.ogrid[:mask_siz[0], :mask_siz[1]]
-    xx = xx - centre[0]
-    yy = yy - centre[1]
-    slice_mask = (xx**2 + yy**2) < radius**2
+    # Generate grid coordinates
+    y, x = np.meshgrid(np.arange(mask_siz[0]),
+                       np.arange(mask_siz[1]), indexing='ij')
+
+    # Shift the grid to center the circle
+    x = x - centre[0]
+    y = y - centre[1]
+
+    # Create the mask
+    slice_mask = (x**2 + y**2) < radius**2
+
     return slice_mask
 
 
@@ -137,4 +151,4 @@ def grad(p1, p2):
 
 
 def incp(p1, p2):
-    return (p2[1] - grad(p1, p2) * p2[0])
+    return p2[1] - grad(p1, p2) * p2[0]
