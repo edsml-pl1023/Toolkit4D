@@ -4,7 +4,7 @@ from skimage import filters
 from ..dataio.read_raw import read_raw
 
 
-def threshold_rock(raw_file, nbins=256):
+def threshold_rock(raw_file=None, raw_image=None, nbins=256):
     """_summary_
 
     Args:
@@ -15,30 +15,29 @@ def threshold_rock(raw_file, nbins=256):
         nbins (int): decide histogram precision; larger takes longer
         time to calculate
     """
+    if raw_file is not None and raw_image is not None:
+        raise ValueError('Provide only one: raw_file or raw_image.')
 
-    clean_path = os.path.basename(raw_file)
-    file_name = os.path.splitext(clean_path)[0]
-    fnparts = file_name.split('_')
-    im_size = [int(fnparts[5]), int(fnparts[6]), int(fnparts[7])]
-    im_type = fnparts[3]
+    if raw_image is not None:
+        raw = raw_image
 
-    # probably add more supported types
-    if im_type == 'uint16':
-        max_value = 65535
+    elif raw_file is not None:
+        clean_path = os.path.basename(raw_file)
+        file_name = os.path.splitext(clean_path)[0]
+        fnparts = file_name.split('_')
+        im_size = [int(fnparts[5]), int(fnparts[6]), int(fnparts[7])]
+        im_type = fnparts[3]
+        raw = read_raw(raw_file, im_size, im_type)
+
     else:
-        raise ValueError('Unsupported image type')
+        raise ValueError('Either raw_file or raw_image must be provided.')
 
-    # print('- Loading raw data...')
-    raw = read_raw(raw_file, im_size, im_type)
-    # print('\t - Done.')
+    # Get the maximum value for the dtype of the image
+    max_value = np.iinfo(raw.dtype).max
 
     # probably apply medium filter before threshold
-    hist, _ = np.histogram(raw, bins=nbins, range=(0, np.iinfo(raw.dtype).max))
+    hist, _ = np.histogram(raw, bins=nbins, range=(0, max_value))
 
-    # first output is thresholding value and the second is thresholded image
-    # print("- Finding Otsu's threshold...")
     ret = filters.threshold_otsu(hist=hist)
-    # ret = filters.threshold_otsu(raw)
-    # print('\t - Rocks threshold calculation is done.')
 
-    return ret*(max_value/(nbins-1))
+    return ret * (max_value / (nbins - 1))
