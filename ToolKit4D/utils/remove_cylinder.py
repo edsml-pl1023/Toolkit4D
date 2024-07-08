@@ -17,28 +17,45 @@ def remove_cylinder(img, ring_rad, ring_frac):
     inner_radius = ring_rad
     outer_radius = round(ring_rad * ring_frac)
 
-    # choose two reference slice
-    slice_top = round(img.shape[2] * 0.6)
-    slice_btm = round(img.shape[2] * 0.3)
+    # Sample more slices for evaluation
+    num_samples = 5
+    slices = np.linspace(0.3, 0.6, num_samples)
+    positions = []
+    radii = []
 
-    top_pos, top_radius = detect_ring(img[:, :, slice_top],
-                                      inner_radius, outer_radius)
-    btm_pos, btm_radius = detect_ring(img[:, :, slice_btm],
-                                      inner_radius, outer_radius)
+    for frac in slices:
+        slice_idx = round(img.shape[2] * frac)
+        pos, radius = detect_ring(img[:, :, slice_idx], inner_radius, outer_radius)
+        if radius == -1:
+            raise ValueError(f"circle not found at slice: {slice_idx}")
+        elif radius == -2:
+            raise ValueError(f"multiple circles found at slice: {slice_idx}")
 
-    if top_radius == -1:
-        raise ValueError(f"circle not found at slice: {slice_top}")
-    elif top_radius == -2:
-        raise ValueError(f"multiple circles found at slice: {slice_top}")
-    if btm_radius == -1:
-        raise ValueError(f"circle not found at slice: {slice_btm}")
-    elif btm_radius == -2:
-        raise ValueError(f"multiple circles found at slice: {slice_btm}")
+        positions.append(pos)
+        radii.append(radius)
 
-    grad_x = grad([slice_btm, btm_pos[0]], [slice_top, top_pos[0]])
-    grad_y = grad([slice_btm, btm_pos[1]], [slice_top, top_pos[1]])
-    incp_x = grad([slice_btm, btm_pos[0]], [slice_top, top_pos[0]])
-    incp_y = grad([slice_btm, btm_pos[1]], [slice_top, top_pos[1]])
+    # Calculate gradients and intercepts for all points
+    grad_x_list = []
+    grad_y_list = []
+    incp_x_list = []
+    incp_y_list = []
+
+    for i in range(num_samples - 1):
+        p1 = [round(img.shape[2] * slices[i]), positions[i][0]]
+        p2 = [round(img.shape[2] * slices[i+1]), positions[i+1][0]]
+        grad_x_list.append(grad(p1, p2))
+        incp_x_list.append(incp(p1, p2))
+
+        p1 = [round(img.shape[2] * slices[i]), positions[i][1]]
+        p2 = [round(img.shape[2] * slices[i+1]), positions[i+1][1]]
+        grad_y_list.append(grad(p1, p2))
+        incp_y_list.append(incp(p1, p2))
+
+    # Average gradients and intercepts to reduce error
+    grad_x = np.mean(grad_x_list)
+    grad_y = np.mean(grad_y_list)
+    incp_x = np.mean(incp_x_list)
+    incp_y = np.mean(incp_y_list)
 
     slices = np.arange(img.shape[2])
     ring_centres = np.zeros((img.shape[2], 2))
@@ -48,8 +65,9 @@ def remove_cylinder(img, ring_rad, ring_frac):
     # Loop through masking
     mask_siz = [img.shape[0], img.shape[1]]
     for i in range(img.shape[2]):
-        slice_mask = create_mask(mask_siz, ring_centres[i], ring_rad)
+        slice_mask = create_mask(mask_siz, ring_centres[i], 97)
         img[:, :, i] = np.logical_and(img[:, :, i], slice_mask)
+    return img
 
 
 def detect_ring(slice, inner_radius, outer_radius):
