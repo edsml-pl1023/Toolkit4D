@@ -3,6 +3,23 @@ import numpy as np
 
 def read_raw(imname, imsize, imtype, big_endian=False,
              skip=0, transposeflag=False):
+    """_summary_
+
+    Args:
+        imname (_type_): complete path to a raw image; e.g.
+            './tests/test_data/LA2_d20_v1_uint16_unnormalised_254_254_253.raw'
+        imsize (_type_): _description_
+        imtype (_type_): _description_
+        big_endian (bool, optional): _description_. Defaults to False.
+        skip (int, optional): _description_. Defaults to 0.
+        transposeflag (bool, optional): _description_. Defaults to False.
+
+    Raises:
+        ValueError: _description_
+
+    Returns:
+        _type_: _description_
+    """
     dtype_map = {
         'uint8': 'u1',
         'uint16': 'u2',
