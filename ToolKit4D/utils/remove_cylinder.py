@@ -45,6 +45,12 @@ def remove_cylinder(img, ring_rad, ring_frac):
     ring_centres[:, 0] = slices * grad_x + incp_x
     ring_centres[:, 1] = slices * grad_y + incp_y
 
+    # Loop through masking
+    mask_siz = [img.shape[0], img.shape[1]]
+    for i in range(img.shape[2]):
+        slice_mask = create_mask(mask_siz, ring_centres[i], ring_rad)
+        img[:, :, i] = np.logical_and(img[:, :, i], slice_mask)
+
 
 def detect_ring(slice, inner_radius, outer_radius):
     """_summary_
@@ -64,8 +70,8 @@ def detect_ring(slice, inner_radius, outer_radius):
         cv2.HOUGH_GRADIENT,
         dp=1,
         minDist=outer_radius-inner_radius,
-        param1=40,
-        param2=15,
+        param1=200,  # edge thresh; my edge close to 255
+        param2=17,  # higher: more accurate but fewer circles
         minRadius=inner_radius,
         maxRadius=outer_radius
     )
@@ -77,16 +83,35 @@ def detect_ring(slice, inner_radius, outer_radius):
         circle = circles[0][0]  # Take the first detected circle
         pos = np.array([circle[0], circle[1]])  # (x, y) position
         radius = circle[2]
-        print(
-            f'Detected one circle: center (x={circle[0]}, y={circle[1]}) '
-            f'with radius: {circle[2]}'
-        )
+        # print(
+        #     f'Detected one circle: center (x={circle[0]}, y={circle[1]}) '
+        #     f'with radius: {circle[2]}'
+        # )
     else:
         print(f'More than one ring detected: {len(circles[0])} rings')
         pos = np.array([-2, -2])
         radius = -2
 
     return pos, radius
+
+
+def create_mask(mask_siz, centre, radius):
+    """
+    Create a circular mask with given size, center, and radius.
+
+    Parameters:
+    mask_siz (tuple): Size of the mask (height, width).
+    centre (tuple): Coordinates of the center of the circle (x, y).
+    radius (int): Radius of the circle.
+
+    Returns:
+    numpy.ndarray: Circular mask.
+    """
+    xx, yy = np.ogrid[:mask_siz[0], :mask_siz[1]]
+    xx = xx - centre[0]
+    yy = yy - centre[1]
+    slice_mask = (xx**2 + yy**2) < radius**2
+    return slice_mask
 
 
 def grad(p1, p2):
