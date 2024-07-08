@@ -30,4 +30,4 @@ class ToolKitPipeline:
         return raw
 
     def threshold_rock(self):
-        self.rockThresh = thresh.threshold_rock(raw_image=self.raw)
+        self.rock_thresh = thresh.threshold_rock(raw_image=self.raw)
