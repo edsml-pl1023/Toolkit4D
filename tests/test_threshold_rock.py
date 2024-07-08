@@ -92,15 +92,15 @@ def test_thresholding_mse():
             threshold_info[0]+threshold_info[1]
             )]
 
-        ret_python = thresholding.threshold_rock(raw_file)
-        ret_matlab = threshold_info[2]
+        rock_thresh_python = thresholding.threshold_rock(raw_file)
+        rock_thresh_matlab = threshold_info[2]
 
         # load data
         img_raw = dataio.read_raw(raw_file, img_size, img_type)
 
         # apply thresholding
-        binary_matlab = img_raw >= ret_matlab
-        binary_python = img_raw >= ret_python
+        binary_matlab = img_raw >= rock_thresh_matlab
+        binary_python = img_raw >= rock_thresh_python
         difference = binary_matlab ^ binary_python
         relative_error = np.sum(difference) / np.prod(img_size)
         assert relative_error <= 0.05
