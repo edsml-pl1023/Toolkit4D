@@ -34,11 +34,20 @@ class ToolKitPipeline:
 
     def threshold_rock(self):
         self.rock_thresh = thresh.threshold_rock(raw_image=self.raw)
+        self.mask = self.raw >= self.rock_thresh
 
-    def remove_cylinder(self, ring_rad=100, ring_frac=1.5):
+    def remove_cylinder(self, ring_rad: int = 100, ring_frac: float = 1.5):
         self.threshold_rock()
-        # raw_binary does not affect self.raw
-        raw_binary = self.raw >= self.rock_thresh
-        # ut.remove_cylinder modify 'raw_binary' in place
-        self.mask_nocolumn = ut.remove_cylinder(raw_binary, ring_rad,
-                                                ring_frac)
+        self.mask = ut.remove_cylinder(self.mask, ring_rad, ring_frac)
+
+    def segment_rocks(self, remove_cylinder: bool = True):
+        # both set value for attribute: self.mask
+        if remove_cylinder:
+            self.remove_cylinder()
+        else:
+            self.threshold_rock()
+
+        # then downample self.mask
+        # this is different from Matlab code; in matlab; it downsample from raw
+        # then do the threshold rock (for mask) and remove cylinder
+        self.optimized_mask = ut.segment_rocks()
