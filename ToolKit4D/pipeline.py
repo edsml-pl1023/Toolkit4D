@@ -7,6 +7,9 @@ import os
 # 1. write the basic structure
 # 2. add clean ram inside class and compare the saving of ram
 # 3. add lines to write intermediate result into disk
+# 4. call one functoin to execute all previous function
+# 5. pay attension: some function will change the variable inside
+#    - so for those i want to keep; pass copy to function
 class ToolKitPipeline:
     """_summary_: processing per image per instance
     """
@@ -31,3 +34,11 @@ class ToolKitPipeline:
 
     def threshold_rock(self):
         self.rock_thresh = thresh.threshold_rock(raw_image=self.raw)
+
+    def remove_cylinder(self, ring_rad=100, ring_frac=1.5):
+        self.threshold_rock()
+        # raw_binary does not affect self.raw
+        raw_binary = self.raw >= self.rock_thresh
+        # ut.remove_cylinder modify 'raw_binary' in place
+        self.mask_nocolumn = ut.remove_cylinder(raw_binary, ring_rad,
+                                                ring_frac)
