@@ -18,7 +18,7 @@ def remove_cylinder(img, ring_rad, ring_frac):
     outer_radius = round(ring_rad * ring_frac)
 
     # Sample more slices for evaluation
-    num_samples = 10
+    num_samples = 2
     slices = np.linspace(0.3, 0.6, num_samples)
     positions = []
     radii = []
@@ -88,14 +88,14 @@ def detect_ring(slice, inner_radius, outer_radius):
     # blurred = cv2.GaussianBlur(slice_fill, (9, 9), 2)
     # Apply Canny Edge Detection
     # edges = cv2.Canny(blurred, 50, 150)
-    edges = cv2.Canny(slice_fill, 50, 150)
+    edges = cv2.Canny(slice_fill, 50, 255)
 
     circles = cv2.HoughCircles(
         edges,
         cv2.HOUGH_GRADIENT,
         dp=1,
         minDist=2*inner_radius,
-        param1=100,  # edge thresh; my edge close to 255
+        param1=50,  # edge thresh; my edge in range (50,150)
         param2=18,  # higher: more accurate but fewer circles
         minRadius=inner_radius,
         maxRadius=outer_radius
@@ -108,10 +108,10 @@ def detect_ring(slice, inner_radius, outer_radius):
         circle = circles[0][0]  # Take the first detected circle
         pos = np.array([circle[0], circle[1]])  # (x, y) position
         radius = circle[2]
-        print(
-            f'Detected one circle: center (x={circle[0]}, y={circle[1]}) '
-            f'with radius: {circle[2]}'
-        )
+        # print(
+        #     f'Detected one circle: center (x={circle[0]}, y={circle[1]}) '
+        #     f'with radius: {circle[2]}'
+        # )
     else:
         print(f'More than one ring detected: {len(circles[0])} rings')
         pos = np.array([-2, -2])
