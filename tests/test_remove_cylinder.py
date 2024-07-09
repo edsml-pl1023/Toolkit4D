@@ -1,6 +1,5 @@
 import os
 import glob
-from ToolKit4D.utils import remove_cylinder
 from ToolKit4D.utils.remove_cylinder import detect_ring
 from ToolKit4D.dataio import read_raw
 from ToolKit4D.thresholding import threshold_rock
@@ -26,4 +25,4 @@ def test_detect_ring():
             if radius == -1 or radius == -2:
                 fail += 1
         fail_rate = fail / float(img_binary.shape[2])
-        assert fail_rate <= 0.02
+        assert fail_rate <= 0.01
