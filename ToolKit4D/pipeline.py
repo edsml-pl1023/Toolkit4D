@@ -1,6 +1,7 @@
 import ToolKit4D.dataio as dio
 import ToolKit4D.thresholding as thresh
 import ToolKit4D.utils as ut
+import ToolKit4D.stages as st
 import os
 
 
@@ -51,8 +52,15 @@ class ToolKitPipeline:
         # then do the threshold rock (for mask) and remove cylinder
         self.optimized_mask = ut.segment_rocks(self.mask)
 
-    def plot(self, slice):
-        import matplotlib.pyplot as plt
-        fig, axes = plt.subplots(1, 2, figsize=(15, 6))
-        axes[0].imshow(self.optimized_mask[:, :, slice])
-        axes[1].imshow(self.mask[:, :, 4*slice])
+    # def plot(self, slice):
+    #     import matplotlib.pyplot as plt
+    #     fig, axes = plt.subplots(1, 2, figsize=(15, 6))
+    #     axes[0].imshow(self.optimized_mask[:, :, slice], cmap='gray')
+    #     vmin = self.raw[:, :, slice].min()
+    #     vmax = self.raw[:, :, slice].max()
+    #     axes[1].imshow(self.frag[:, :, 4*slice], vmin=vmin,
+    #                    vmax=vmax, cmap='gray')
+
+    def agglomerate_extraction(self):
+        self.segment_rocks()
+        self.frag = st.agglomerate_extraction(self.optimized_mask, self.raw)
