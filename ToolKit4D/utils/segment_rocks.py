@@ -5,7 +5,7 @@ from scipy.ndimage import binary_opening
 
 
 def segment_rocks(mask: np.ndarray, d_sample: int = 4, connectivity: int = 2,
-                  min_obj_size: int = 125):
+                  min_obj_size: int = 2):
     """This function returns an optimized (downsampled /
     remove small object / remove noise) mask
 
@@ -13,6 +13,8 @@ def segment_rocks(mask: np.ndarray, d_sample: int = 4, connectivity: int = 2,
         mask (np.ndarray): a binary mask from threshold_rock / remove_cylinder
         d_sample (int, optional): _description_. Defaults to 4.
         connectivity: 1 is 6; 2 is 18; 3 is 26
+        min_obj_size: initial: 1000*4*4*4; my downsampled test image (by 8):
+                      1000*4*4*4/(8*8*8)=125; my_down 4 agian: 125 / (4*4*4)=2
     """
     # downsample the mask
     downsampled_mask = mask[::d_sample, ::d_sample, ::d_sample]
@@ -55,7 +57,7 @@ def get_nhood(connectivity):
     """
     Returns the requested 3D connectivity neighbourhood.
     Parameters:
-    - selection: 6, 18, or 26
+    - selection: 1, 2, or 3
     """
     if connectivity == 1:
         nhood = np.zeros((3, 3, 3), dtype=int)
