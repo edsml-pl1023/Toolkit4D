@@ -3,7 +3,7 @@ import ToolKit4D.thresholding as thresh
 import ToolKit4D.utils as ut
 import ToolKit4D.stages as st
 import os
-
+import warnings
 
 # 1. write the basic structure
 # 2. add clean ram inside class and compare the saving of ram
@@ -14,6 +14,8 @@ import os
 # 6. add option to load disk data stored at (3) to each funciton
 #    - so no need to run 'previous' function again
 #    - but increase time for loading data
+
+
 class ToolKitPipeline:
     """_summary_: processing per image per instance
     """
@@ -37,11 +39,15 @@ class ToolKitPipeline:
         return raw
 
     def threshold_rock(self):
+        print('-----Finding Rock Threshold-----')
+        print('\t calling threshold_rock()')
         self.rock_thresh = thresh.threshold_rock(raw_image=self.raw)
         self.mask = self.raw >= self.rock_thresh
 
     def remove_cylinder(self, ring_rad: int = 99, ring_frac: float = 1.5):
         self.threshold_rock()
+        print('-----Removing Cylinder-----')
+        print('\t calling remove_cylinder()')
         self.mask = ut.remove_cylinder(self.mask, ring_rad, ring_frac)
 
     def segment_rocks(self, remove_cylinder: bool = True):
@@ -54,12 +60,20 @@ class ToolKitPipeline:
             self.remove_cylinder()
         else:
             self.threshold_rock()
+        print('-----Segment Rocks-----')
+        print('\t calling segment_rocks()')
         self.optimized_mask = st.segment_rocks(self.mask)
 
     def agglomerate_extraction(self):
         self.segment_rocks()
+        print('-----Extract Agglomerates-----')
+        print('\t calling agglomerate_extraction()')
         self.frag = st.agglomerate_extraction(self.optimized_mask, self.raw)
 
     def th_entropy_lesf(self):
         self.agglomerate_extraction()
-        self.entropy_thresh = thresh.th_entropy_lesf(self.frag)
+        print('-----Finding Grain Threshold')
+        print('\t calling th_entropy_lesf()')
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            self.entropy_thresh = thresh.th_entropy_lesf(self.frag)
