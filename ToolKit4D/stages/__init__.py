@@ -1,1 +1,2 @@
 from .agglomerate_extraction import agglomerate_extraction
+from .segment_rocks import segment_rocks
