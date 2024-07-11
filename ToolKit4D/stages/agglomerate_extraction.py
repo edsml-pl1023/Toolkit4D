@@ -18,7 +18,7 @@ def agglomerate_extraction(optimized_mask: np.ndarray, raw: np.ndarray,
     optimized_mask_int = optimized_mask.astype(int)
     optimized_mask_full = resize(optimized_mask_int, raw.shape, order=1,
                                  preserve_range=True, anti_aliasing=True)
-    optimized_mask_full = (optimized_mask_full > 0.5).astype(np.bool)
+    optimized_mask_full = (optimized_mask_full > 0.5).astype(bool)
 
     # Determine the size of the image
     x, y, z = optimized_mask_full.shape
