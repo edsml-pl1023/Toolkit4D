@@ -11,6 +11,9 @@ import os
 # 4. call one functoin to execute all previous function
 # 5. pay attension: some function will change the variable inside
 #    - so for those i want to keep; pass copy to function
+# 6. add option to load disk data stored at (3) to each funciton
+#    - so no need to run 'previous' function again
+#    - but increase time for loading data
 class ToolKitPipeline:
     """_summary_: processing per image per instance
     """
@@ -42,25 +45,21 @@ class ToolKitPipeline:
         self.mask = ut.remove_cylinder(self.mask, ring_rad, ring_frac)
 
     def segment_rocks(self, remove_cylinder: bool = True):
+        """
+        different from Matlab code; Matlab: downsample from raw then
+        thershold and remove; Here: threshold and remove then downsample
+        """
         # both set value for attribute: self.mask
         if remove_cylinder:
             self.remove_cylinder()
         else:
             self.threshold_rock()
-        # then downample self.mask
-        # this is different from Matlab code; in matlab; it downsample from raw
-        # then do the threshold rock (for mask) and remove cylinder
-        self.optimized_mask = ut.segment_rocks(self.mask)
-
-    # def plot(self, slice):
-    #     import matplotlib.pyplot as plt
-    #     fig, axes = plt.subplots(1, 2, figsize=(15, 6))
-    #     axes[0].imshow(self.optimized_mask[:, :, slice], cmap='gray')
-    #     vmin = self.raw[:, :, slice].min()
-    #     vmax = self.raw[:, :, slice].max()
-    #     axes[1].imshow(self.frag[:, :, 4*slice], vmin=vmin,
-    #                    vmax=vmax, cmap='gray')
+        self.optimized_mask = st.segment_rocks(self.mask)
 
     def agglomerate_extraction(self):
         self.segment_rocks()
         self.frag = st.agglomerate_extraction(self.optimized_mask, self.raw)
+
+    def th_entropy_lesf(self):
+        self.agglomerate_extraction()
+        self.entropy_thresh = thresh.th_entropy_lesf(self.frag)

@@ -28,6 +28,7 @@ def segment_rocks(mask: np.ndarray, d_sample: int = 4, connectivity: int = 2,
         if prop.area < min_obj_size:
             downsampled_mask[labeled_img == prop.label] = False
 
+    # may need to add del mask fill to save ram
     for slice_idx in [0, downsampled_mask.shape[2] - 1]:
         mask_fill = binary_fill_holes(downsampled_mask[:, :, slice_idx])
         downsampled_mask[:, :, slice_idx] = mask_fill
