@@ -54,6 +54,7 @@ class ToolKitPipeline:
             self.threshold_rock()
             print('-----Removing Cylinder-----')
             print('\t calling remove_cylinder()')
+            # delattr(self, 'rock_thresh')
             self.column_mask = ut.remove_cylinder(self.rock_thresh_mask,
                                                   ring_rad, ring_frac)
 
@@ -66,9 +67,12 @@ class ToolKitPipeline:
             if remove_cylinder:
                 self.remove_cylinder()
                 initial_mask = self.column_mask
+                # delattr(self, 'rock_thresh_mask')
+                # delattr(self, 'column_mask')
             else:
                 self.threshold_rock()
                 initial_mask = self.rock_thresh_mask
+                # delattr(self, 'rock_thresh_mask')
             print('-----Segment Rocks-----')
             print('\t calling segment_rocks()')
             self.optimized_rock_mask = st.segment_rocks(initial_mask)
@@ -86,6 +90,8 @@ class ToolKitPipeline:
         if not hasattr(self, 'grain_thresh'):
             print('-----Finding Grain Threshold')
             print('\t calling th_entropy_lesf()')
+            # delattr(self, 'optimized_rock_mask')
+            # delattr(self, 'raw')
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 self.grain_thresh = thresh.th_entropy_lesf(self.frag)
