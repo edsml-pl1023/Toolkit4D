@@ -49,16 +49,20 @@ class ToolKitPipeline:
             self.rock_thresh = thresh.threshold_rock(raw_image=self.raw)
             self.rock_thresh_mask = self.raw >= self.rock_thresh
 
-    def remove_cylinder(self, ring_rad: int = 99, ring_frac: float = 1.5):
+    def remove_cylinder(self, ring_rad: int = 99, ring_frac: float = 1.5,
+                        del_attr: bool = True):
         if not hasattr(self, 'column_mask'):
             self.threshold_rock()
             print('-----Removing Cylinder-----')
             print('\t calling remove_cylinder()')
-            # delattr(self, 'rock_thresh')
+            if del_attr:
+                # delattr(self, 'rock_thresh')
+                del self.rock_thresh
             self.column_mask = ut.remove_cylinder(self.rock_thresh_mask,
                                                   ring_rad, ring_frac)
 
-    def segment_rocks(self, remove_cylinder: bool = True):
+    def segment_rocks(self, remove_cylinder: bool = True,
+                      del_attr: bool = True):
         """
         different from Matlab code; Matlab: downsample from raw then
         thershold and remove; Here: threshold and remove then downsample
@@ -67,12 +71,17 @@ class ToolKitPipeline:
             if remove_cylinder:
                 self.remove_cylinder()
                 initial_mask = self.column_mask
-                # delattr(self, 'rock_thresh_mask')
-                # delattr(self, 'column_mask')
+                if del_attr:
+                    # delattr(self, 'rock_thresh_mask')
+                    # delattr(self, 'column_mask')
+                    del self.rock_thresh_mask
+                    del self.column_mask
             else:
                 self.threshold_rock()
                 initial_mask = self.rock_thresh_mask
-                # delattr(self, 'rock_thresh_mask')
+                if del_attr:
+                    # delattr(self, 'rock_thresh_mask')
+                    del self.rock_thresh_mask
             print('-----Segment Rocks-----')
             print('\t calling segment_rocks()')
             self.optimized_rock_mask = st.segment_rocks(initial_mask)
@@ -85,13 +94,16 @@ class ToolKitPipeline:
             self.frag = st.agglomerate_extraction(self.optimized_rock_mask,
                                                   self.raw)
 
-    def th_entropy_lesf(self):
+    def th_entropy_lesf(self, del_attr: bool = True):
         self.agglomerate_extraction()
         if not hasattr(self, 'grain_thresh'):
             print('-----Finding Grain Threshold')
             print('\t calling th_entropy_lesf()')
-            # delattr(self, 'optimized_rock_mask')
-            # delattr(self, 'raw')
+            if del_attr:
+                # delattr(self, 'optimized_rock_mask')
+                # delattr(self, 'raw')
+                del self.optimized_rock_mask
+                del self.raw
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 self.grain_thresh = thresh.th_entropy_lesf(self.frag)
