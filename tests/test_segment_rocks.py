@@ -17,7 +17,7 @@ def test_segment_rocks():
         img_processor = ToolKitPipeline(raw_file)
         img_processor.segment_rocks()
         opMask_matlab = mat_data['data'][img_processor.identifier][0][0]
-        opMask_python = img_processor.optimized_mask
+        opMask_python = img_processor.optimized_rock_mask
         difference = np.logical_xor(opMask_python, opMask_matlab)
         different_pixels = np.sum(difference)
         print('differnet pixels:')

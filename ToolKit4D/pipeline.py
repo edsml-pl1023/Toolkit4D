@@ -14,6 +14,8 @@ import warnings
 # 6. add option to load disk data stored at (3) to each funciton
 #    - so no need to run 'previous' function again
 #    - but increase time for loading data
+# 7. To avoid executing multiple times when execute previous methods;
+#    use hasattr(self, 'property')
 
 
 class ToolKitPipeline:
@@ -39,16 +41,19 @@ class ToolKitPipeline:
         return raw
 
     def threshold_rock(self):
-        print('-----Finding Rock Threshold-----')
-        print('\t calling threshold_rock()')
-        self.rock_thresh = thresh.threshold_rock(raw_image=self.raw)
-        self.mask = self.raw >= self.rock_thresh
+        if not hasattr(self, 'rock_thresh'):
+            print('-----Finding Rock Threshold-----')
+            print('\t calling threshold_rock()')
+            self.rock_thresh = thresh.threshold_rock(raw_image=self.raw)
+            self.rock_thresh_mask = self.raw >= self.rock_thresh
 
     def remove_cylinder(self, ring_rad: int = 99, ring_frac: float = 1.5):
-        self.threshold_rock()
-        print('-----Removing Cylinder-----')
-        print('\t calling remove_cylinder()')
-        self.mask = ut.remove_cylinder(self.mask, ring_rad, ring_frac)
+        if not hasattr(self, 'column_mask'):
+            self.threshold_rock()
+            print('-----Removing Cylinder-----')
+            print('\t calling remove_cylinder()')
+            self.column_mask = ut.remove_cylinder(self.rock_thresh_mask,
+                                                  ring_rad, ring_frac)
 
     def segment_rocks(self, remove_cylinder: bool = True):
         """
@@ -58,22 +63,28 @@ class ToolKitPipeline:
         # both set value for attribute: self.mask
         if remove_cylinder:
             self.remove_cylinder()
+            initial_mask = self.column_mask
         else:
             self.threshold_rock()
-        print('-----Segment Rocks-----')
-        print('\t calling segment_rocks()')
-        self.optimized_mask = st.segment_rocks(self.mask)
+            initial_mask = self.rock_thresh_mask
+        if not hasattr(self, 'optimized_rock_mask'):
+            print('-----Segment Rocks-----')
+            print('\t calling segment_rocks()')
+            self.optimized_rock_mask = st.segment_rocks(initial_mask)
 
     def agglomerate_extraction(self):
         self.segment_rocks()
-        print('-----Extract Agglomerates-----')
-        print('\t calling agglomerate_extraction()')
-        self.frag = st.agglomerate_extraction(self.optimized_mask, self.raw)
+        if not hasattr(self, 'frag'):
+            print('-----Extract Agglomerates-----')
+            print('\t calling agglomerate_extraction()')
+            self.frag = st.agglomerate_extraction(self.optimized_rock_mask,
+                                                  self.raw)
 
     def th_entropy_lesf(self):
         self.agglomerate_extraction()
-        print('-----Finding Grain Threshold')
-        print('\t calling th_entropy_lesf()')
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            self.entropy_thresh = thresh.th_entropy_lesf(self.frag)
+        if not hasattr(self, 'entropy_thresh'):
+            print('-----Finding Grain Threshold')
+            print('\t calling th_entropy_lesf()')
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                self.entropy_thresh = thresh.th_entropy_lesf(self.frag)
