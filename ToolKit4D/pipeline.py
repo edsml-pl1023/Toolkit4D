@@ -16,6 +16,8 @@ import warnings
 #    - but increase time for loading data
 # 7. To avoid executing multiple times when execute previous methods;
 #    use hasattr(self, 'property')
+#    - if call at once; default parameter
+#    - if call separatly: user parameter can set
 
 
 class ToolKitPipeline:
@@ -60,14 +62,13 @@ class ToolKitPipeline:
         different from Matlab code; Matlab: downsample from raw then
         thershold and remove; Here: threshold and remove then downsample
         """
-        # both set value for attribute: self.mask
-        if remove_cylinder:
-            self.remove_cylinder()
-            initial_mask = self.column_mask
-        else:
-            self.threshold_rock()
-            initial_mask = self.rock_thresh_mask
         if not hasattr(self, 'optimized_rock_mask'):
+            if remove_cylinder:
+                self.remove_cylinder()
+                initial_mask = self.column_mask
+            else:
+                self.threshold_rock()
+                initial_mask = self.rock_thresh_mask
             print('-----Segment Rocks-----')
             print('\t calling segment_rocks()')
             self.optimized_rock_mask = st.segment_rocks(initial_mask)
@@ -82,9 +83,9 @@ class ToolKitPipeline:
 
     def th_entropy_lesf(self):
         self.agglomerate_extraction()
-        if not hasattr(self, 'entropy_thresh'):
+        if not hasattr(self, 'grain_thresh'):
             print('-----Finding Grain Threshold')
             print('\t calling th_entropy_lesf()')
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                self.entropy_thresh = thresh.th_entropy_lesf(self.frag)
+                self.grain_thresh = thresh.th_entropy_lesf(self.frag)

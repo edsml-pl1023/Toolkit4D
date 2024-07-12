@@ -8,7 +8,7 @@ import math
 def test_data_match():
     # load mat data
     mat_data = loadmat('./tests/test_data/threshold_values.mat')
-    threshold_infos = {} 
+    threshold_infos = {}
     for rock_label in mat_data['grain_value'].dtype.names:
         for day_label in mat_data['grain_value'][rock_label][0][0].dtype.names:
             threshold_value = int(
@@ -24,6 +24,6 @@ def test_data_match():
     for raw_file in raw_files:
         img_processor = ToolKitPipeline(raw_file)
         img_processor.th_entropy_lesf()
-        assert math.isclose(img_processor.entropy_thresh,
+        assert math.isclose(img_processor.grain_thresh,
                             threshold_infos[img_processor.identifier],
                             abs_tol=5)
