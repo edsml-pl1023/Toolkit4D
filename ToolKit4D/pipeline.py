@@ -3,6 +3,7 @@ import ToolKit4D.thresholding as thresh
 import ToolKit4D.utils as ut
 import ToolKit4D.stages as st
 import os
+import gc
 import warnings
 
 # 1. write the basic structure
@@ -42,7 +43,7 @@ class ToolKitPipeline:
         raw = dio.read_raw(self.rawfile, self.im_size, self.im_type)
         return raw
 
-    def threshold_rock(self):
+    def threshold_rock(self, del_attr: bool = True):
         if not hasattr(self, 'rock_thresh'):
             print('-----Finding Rock Threshold-----')
             print('\t calling threshold_rock()')
@@ -58,6 +59,7 @@ class ToolKitPipeline:
             if del_attr:
                 # delattr(self, 'rock_thresh')
                 del self.rock_thresh
+                gc.collect()
             self.column_mask = ut.remove_cylinder(self.rock_thresh_mask,
                                                   ring_rad, ring_frac)
 
@@ -69,24 +71,26 @@ class ToolKitPipeline:
         """
         if not hasattr(self, 'optimized_rock_mask'):
             if remove_cylinder:
-                self.remove_cylinder()
+                self.remove_cylinder(del_attr=del_attr)
                 initial_mask = self.column_mask
                 if del_attr:
                     # delattr(self, 'rock_thresh_mask')
                     # delattr(self, 'column_mask')
                     del self.rock_thresh_mask
                     del self.column_mask
+                    gc.collect()
             else:
                 self.threshold_rock()
                 initial_mask = self.rock_thresh_mask
                 if del_attr:
                     # delattr(self, 'rock_thresh_mask')
                     del self.rock_thresh_mask
+                    gc.collect()
             print('-----Segment Rocks-----')
             print('\t calling segment_rocks()')
             self.optimized_rock_mask = st.segment_rocks(initial_mask)
 
-    def agglomerate_extraction(self):
+    def agglomerate_extraction(self, del_attr: bool = True):
         self.segment_rocks()
         if not hasattr(self, 'frag'):
             print('-----Extract Agglomerates-----')
@@ -104,6 +108,7 @@ class ToolKitPipeline:
                 # delattr(self, 'raw')
                 del self.optimized_rock_mask
                 del self.raw
+                gc.collect()
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 self.grain_thresh = thresh.th_entropy_lesf(self.frag)
