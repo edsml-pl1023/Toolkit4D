@@ -43,7 +43,7 @@ class ToolKitPipeline:
         raw = dio.read_raw(self.rawfile, self.im_size, self.im_type)
         return raw
 
-    def threshold_rock(self, del_attr: bool = True):
+    def threshold_rock(self, del_attr: bool = False):
         if not hasattr(self, 'rock_thresh'):
             print('-----Finding Rock Threshold-----')
             print('\t calling threshold_rock()')
@@ -51,7 +51,7 @@ class ToolKitPipeline:
             self.rock_thresh_mask = self.raw >= self.rock_thresh
 
     def remove_cylinder(self, ring_rad: int = 99, ring_frac: float = 1.5,
-                        del_attr: bool = True):
+                        del_attr: bool = False):
         if not hasattr(self, 'column_mask'):
             self.threshold_rock()
             print('-----Removing Cylinder-----')
@@ -63,7 +63,7 @@ class ToolKitPipeline:
             self.column_mask = ut.remove_cylinder(self.rock_thresh_mask,
                                                   ring_rad, ring_frac)
 
-    def segment_rocks(self, remove_cylinder: bool = True,
+    def segment_rocks(self, remove_cylinder: bool = False,
                       del_attr: bool = True):
         """
         different from Matlab code; Matlab: downsample from raw then
@@ -90,7 +90,7 @@ class ToolKitPipeline:
             print('\t calling segment_rocks()')
             self.optimized_rock_mask = st.segment_rocks(initial_mask)
 
-    def agglomerate_extraction(self, del_attr: bool = True):
+    def agglomerate_extraction(self, del_attr: bool = False):
         self.segment_rocks()
         if not hasattr(self, 'frag'):
             print('-----Extract Agglomerates-----')
@@ -98,7 +98,7 @@ class ToolKitPipeline:
             self.frag = st.agglomerate_extraction(self.optimized_rock_mask,
                                                   self.raw)
 
-    def th_entropy_lesf(self, del_attr: bool = True):
+    def th_entropy_lesf(self, del_attr: bool = False):
         self.agglomerate_extraction()
         if not hasattr(self, 'grain_thresh'):
             print('-----Finding Grain Threshold')
