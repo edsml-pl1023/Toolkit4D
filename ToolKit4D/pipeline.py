@@ -63,8 +63,8 @@ class ToolKitPipeline:
             self.column_mask = ut.remove_cylinder(self.rock_thresh_mask,
                                                   ring_rad, ring_frac)
 
-    def segment_rocks(self, remove_cylinder: bool = False,
-                      del_attr: bool = True):
+    def segment_rocks(self, remove_cylinder: bool = True,
+                      del_attr: bool = False):
         """
         different from Matlab code; Matlab: downsample from raw then
         thershold and remove; Here: threshold and remove then downsample
