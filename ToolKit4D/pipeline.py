@@ -5,6 +5,7 @@ import ToolKit4D.stages as st
 import os
 import gc
 import warnings
+import scipy.io
 
 # 1. write the basic structure
 # 2. add clean ram inside class and compare the saving of ram
@@ -43,15 +44,20 @@ class ToolKitPipeline:
         raw = dio.read_raw(self.rawfile, self.im_size, self.im_type)
         return raw
 
-    def threshold_rock(self, del_attr: bool = False):
+    def threshold_rock(self, del_attr: bool = False, save: bool = False):
         if not hasattr(self, 'rock_thresh'):
             print('-----Finding Rock Threshold-----')
             print('\t calling threshold_rock()')
             self.rock_thresh = thresh.threshold_rock(raw_image=self.raw)
             self.rock_thresh_mask = self.raw >= self.rock_thresh
+            if save:
+                scipy.io.savemat(self.identifier + '_rock_thresh_mask',
+                                 {'rock_thresh_mask': self.rock_thresh_mask})
+                with open(self.identifier + '_rock_thresh.txt', 'w') as file:
+                    file.write(str(self.rock_thresh))
 
     def remove_cylinder(self, ring_rad: int = 99, ring_frac: float = 1.5,
-                        del_attr: bool = False):
+                        del_attr: bool = False, save: bool = False):
         if not hasattr(self, 'column_mask'):
             self.threshold_rock()
             print('-----Removing Cylinder-----')
@@ -62,9 +68,13 @@ class ToolKitPipeline:
                 gc.collect()
             self.column_mask = ut.remove_cylinder(self.rock_thresh_mask,
                                                   ring_rad, ring_frac)
+            if save:
+                scipy.io.savemat(self.identifier + '_column_mask',
+                                 {'_column_mask': self.column_mask})
 
     def segment_rocks(self, remove_cylinder: bool = True,
-                      min_obj_size: int = 2, del_attr: bool = False):
+                      min_obj_size: int = 2, del_attr: bool = False,
+                      save: bool = False):
         """
         different from Matlab code; Matlab: downsample from raw then
         thershold and remove; Here: threshold and remove then downsample
@@ -91,9 +101,13 @@ class ToolKitPipeline:
             self.optimized_rock_mask = st.segment_rocks(
                 initial_mask,
                 min_obj_size=min_obj_size)
+            if save:
+                scipy.io.savemat(
+                    self.identifier + '_optimized_rock_mask',
+                    {'optimized_rock_mask': self.optimized_rock_mask})
 
     def agglomerate_extraction(self, min_obj_size: int = 2,
-                               del_attr: bool = False):
+                               del_attr: bool = False, save: bool = False):
         self.segment_rocks()
         if not hasattr(self, 'frag'):
             print('-----Extract Agglomerates-----')
@@ -101,8 +115,11 @@ class ToolKitPipeline:
             self.frag = st.agglomerate_extraction(self.optimized_rock_mask,
                                                   self.raw,
                                                   min_obj_size=min_obj_size)
+            if save:
+                scipy.io.savemat(self.identifier + '_frag',
+                                 {'frag': self.frag})
 
-    def th_entropy_lesf(self, del_attr: bool = False):
+    def th_entropy_lesf(self, del_attr: bool = False, save: bool = False):
         self.agglomerate_extraction()
         if not hasattr(self, 'grain_thresh'):
             print('-----Finding Grain Threshold')
@@ -113,6 +130,10 @@ class ToolKitPipeline:
                 del self.optimized_rock_mask
                 del self.raw
                 gc.collect()
+
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 self.grain_thresh = thresh.th_entropy_lesf(self.frag)
+
+            with open(self.identifier + '_grain_thresh.txt', 'w') as file:
+                file.write(str(self.grain_thresh))
