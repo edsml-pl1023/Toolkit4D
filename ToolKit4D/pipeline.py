@@ -64,7 +64,7 @@ class ToolKitPipeline:
                                                   ring_rad, ring_frac)
 
     def segment_rocks(self, remove_cylinder: bool = True,
-                      del_attr: bool = False):
+                      min_obj_size: int = 2, del_attr: bool = False):
         """
         different from Matlab code; Matlab: downsample from raw then
         thershold and remove; Here: threshold and remove then downsample
@@ -88,15 +88,19 @@ class ToolKitPipeline:
                     gc.collect()
             print('-----Segment Rocks-----')
             print('\t calling segment_rocks()')
-            self.optimized_rock_mask = st.segment_rocks(initial_mask)
+            self.optimized_rock_mask = st.segment_rocks(
+                initial_mask,
+                min_obj_size=min_obj_size)
 
-    def agglomerate_extraction(self, del_attr: bool = False):
+    def agglomerate_extraction(self, min_obj_size: int = 2,
+                               del_attr: bool = False):
         self.segment_rocks()
         if not hasattr(self, 'frag'):
             print('-----Extract Agglomerates-----')
             print('\t calling agglomerate_extraction()')
             self.frag = st.agglomerate_extraction(self.optimized_rock_mask,
-                                                  self.raw)
+                                                  self.raw,
+                                                  min_obj_size=min_obj_size)
 
     def th_entropy_lesf(self, del_attr: bool = False):
         self.agglomerate_extraction()
