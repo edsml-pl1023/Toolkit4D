@@ -52,7 +52,7 @@ class ToolKitPipeline:
             self.rock_thresh_mask = self.raw >= self.rock_thresh
             if save:
                 scipy.io.savemat(
-                    './results/' + self.identifier + '_rock_thresh_mask',
+                    './results/' + self.identifier + '_rock_thresh_mask.mat',
                     {'rock_thresh_mask': self.rock_thresh_mask})
                 with open('./results/' + self.identifier +
                           '_rock_thresh.txt', 'w') as file:
@@ -72,7 +72,7 @@ class ToolKitPipeline:
                                                   ring_rad, ring_frac)
             if save:
                 scipy.io.savemat(
-                    './results/' + self.identifier + '_column_mask',
+                    './results/' + self.identifier + '_column_mask.mat',
                     {'_column_mask': self.column_mask})
 
     def segment_rocks(self, remove_cylinder: bool = True,
@@ -106,7 +106,8 @@ class ToolKitPipeline:
                 min_obj_size=min_obj_size)
             if save:
                 scipy.io.savemat(
-                    './results/' + self.identifier + '_optimized_rock_mask',
+                    './results/' + self.identifier +
+                    '_optimized_rock_mask.mat',
                     {'optimized_rock_mask': self.optimized_rock_mask})
 
     def agglomerate_extraction(self, min_obj_size: int = 2,
@@ -119,7 +120,7 @@ class ToolKitPipeline:
                                                   self.raw,
                                                   min_obj_size=min_obj_size)
             if save:
-                scipy.io.savemat('./result/' + self.identifier + '_frag',
+                scipy.io.savemat('./results/' + self.identifier + '_frag.mat',
                                  {'frag': self.frag})
 
     def th_entropy_lesf(self, del_attr: bool = False, save: bool = False):
