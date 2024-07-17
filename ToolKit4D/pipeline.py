@@ -6,6 +6,7 @@ import os
 import gc
 import warnings
 import scipy.io
+from typing import Literal
 
 # 1. write the basic structure
 # 2. add clean ram inside class and compare the saving of ram
@@ -39,6 +40,18 @@ class ToolKitPipeline:
         self.im_size = [int(fnparts[5]), int(fnparts[6]), int(fnparts[7])]
         self.im_type = fnparts[3]
         self.raw = self._read_raw()
+
+    def initialize(self):
+        """
+        Removes all attributes of the instance except those defined
+        in __init__. Used when you want to try other methods parameters
+        but no need to reload raw image.
+        """
+        init_attrs = {'rawfile', 'identifier', 'im_size', 'im_type', 'raw'}
+        attrs = set(self.__dict__.keys())
+        for attr in attrs - init_attrs:
+            delattr(self, attr)
+        gc.collect()
 
     def _read_raw(self):
         raw = dio.read_raw(self.rawfile, self.im_size, self.im_type)
@@ -123,21 +136,34 @@ class ToolKitPipeline:
                 scipy.io.savemat('./results/' + self.identifier + '_frag.mat',
                                  {'frag': self.frag})
 
-    def th_entropy_lesf(self, del_attr: bool = False, save: bool = False):
+    def threshold_grain(self, method: Literal['entropy', 'moments'],
+                        del_attr: bool = False, save: bool = False):
+        """_summary_
+
+        Args:
+            method (str): either 'entropy' or 'moments'
+            del_attr (bool, optional): _description_. Defaults to False.
+            save (bool, optional): _description_. Defaults to False.
+        """
         self.agglomerate_extraction()
         if not hasattr(self, 'grain_thresh'):
             print('-----Finding Grain Threshold')
-            print('\t calling th_entropy_lesf()')
             if del_attr:
                 # delattr(self, 'optimized_rock_mask')
                 # delattr(self, 'raw')
                 del self.optimized_rock_mask
-                del self.raw
+                # del self.raw
                 gc.collect()
 
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                self.grain_thresh = thresh.th_entropy_lesf(self.frag)
+                if method == 'entropy':
+                    print('\t calling th_entropy_lesf()')
+                    self.grain_thresh = thresh.th_entropy_lesf(self.frag)
+                elif method == 'moments':
+                    print('\t calling th_moments()')
+                    self.grain_thresh = thresh.th_moments(self.frag)
+                self.grain_thresh_mask = self.frag >= self.grain_thresh
 
             if save:
                 with open('./results/' + self.identifier +

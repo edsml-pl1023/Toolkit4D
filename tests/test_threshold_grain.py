@@ -5,7 +5,7 @@ import glob
 import math
 
 
-def test_data_match():
+def test_entropy():
     # load mat data
     mat_data = loadmat('./tests/test_data/threshold_values.mat')
     threshold_infos = {}
@@ -23,7 +23,7 @@ def test_data_match():
     raw_files = glob.glob(test_raw_path)
     for raw_file in raw_files:
         img_processor = ToolKitPipeline(raw_file)
-        img_processor.th_entropy_lesf()
+        img_processor.threshold_grain(method='entropy')
         assert math.isclose(img_processor.grain_thresh,
                             threshold_infos[img_processor.identifier],
                             abs_tol=5)
