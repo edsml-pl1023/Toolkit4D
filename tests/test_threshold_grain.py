@@ -1,8 +1,11 @@
 from scipy.io import loadmat
 from ToolKit4D.pipeline import ToolKitPipeline
+from ToolKit4D.stages import agglomerate_extraction
+from ToolKit4D.thresholding import th_entropy_lesf 
 import os
 import glob
 import math
+import warnings
 
 
 def test_entropy():
@@ -21,9 +24,16 @@ def test_entropy():
     test_data_path = './tests/test_data/'
     test_raw_path = os.path.join(test_data_path, '*.raw')
     raw_files = glob.glob(test_raw_path)
-    for raw_file in raw_files:
-        img_processor = ToolKitPipeline(raw_file)
-        img_processor.threshold_grain(method='entropy')
-        assert math.isclose(img_processor.grain_thresh,
-                            threshold_infos[img_processor.identifier],
-                            abs_tol=5)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        for raw_file in raw_files:
+            img_processor = ToolKitPipeline(raw_file)
+            img_processor.segment_rocks()
+            frag_python = agglomerate_extraction(
+                img_processor.optimized_rock_mask,
+                img_processor.raw)
+            grain_thresh = th_entropy_lesf(frag_python)
+            img_processor.threshold_grain(method='entropy')
+            assert math.isclose(grain_thresh,
+                                threshold_infos[img_processor.identifier],
+                                abs_tol=5)

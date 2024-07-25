@@ -31,6 +31,8 @@ def th_entropy_lesf(frag, nbins=65536):
     # Find the threshold
     ind = np.nanargmin(vec)
     peaks, properties = find_peaks(-vec, prominence=True)
+    if len(peaks) == 0:
+        return ind
     peaks[np.where(properties['prominences'] > 0.1)[0][0]]
 
     if len(peaks) > 0 and peaks[0] <= ind:

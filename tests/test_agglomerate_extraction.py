@@ -1,5 +1,6 @@
 from scipy.io import loadmat
 from ToolKit4D.pipeline import ToolKitPipeline
+from ToolKit4D.stages import agglomerate_extraction
 from skimage.metrics import structural_similarity as ssim
 from skimage.transform import resize
 import os
@@ -17,9 +18,14 @@ def test_similarity():
     # use these three lists to maintain index info for raw_files
     for raw_file in raw_files:
         img_processor = ToolKitPipeline(raw_file)
-        img_processor.agglomerate_extraction()
+
+        img_processor.segment_rocks()
         frag_matlab = mat_data['data'][img_processor.identifier][0][0]
-        frag_python = img_processor.frag
+
+        frag_python = agglomerate_extraction(
+            img_processor.optimized_rock_mask,
+            img_processor.raw)
+
         frag_python_resize = resize(frag_python, frag_matlab.shape,
                                     anti_aliasing=True, preserve_range=True)
         if frag_python_resize.dtype == np.float64:

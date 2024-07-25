@@ -5,6 +5,17 @@ from skimage.transform import resize
 
 def agglomerate_extraction(optimized_mask: np.ndarray, raw: np.ndarray,
                            connectivity: int = 2, min_obj_size: int = 2):
+    """_summary_
+
+    Args:
+        optimized_mask (np.ndarray): _description_
+        raw (np.ndarray): _description_
+        connectivity (int, optional): _description_. Defaults to 2.
+        min_obj_size (int, optional): _description_. Defaults to 2.
+
+    Returns:
+        _type_: _description_
+    """
     # Derive connected objects
     labeled_img = label(optimized_mask, connectivity=connectivity)
     # Compute the properties of each connected component using regionprops
