@@ -276,7 +276,8 @@ class ToolKitPipeline:
             print('-----Extract Agglomerates-----')
             print('\t calling agglomerate_extraction()')
             self.frags = []
-            for agglomerate_mask in self.agglomerate_masks:
+            for i, agglomerate_mask in enumerate(self.agglomerate_masks):
+                print('-\t agglomerate {i}:')
                 self.frags.append(st.agglomerate_extraction(agglomerate_mask,
                                   self.raw, min_obj_size=min_obj_size))
             if save:
@@ -308,11 +309,13 @@ class ToolKitPipeline:
                 warnings.simplefilter("ignore")
                 if method == 'entropy':
                     print('\t calling th_entropy_lesf()')
-                    for frag in self.frags:
+                    for i, frag in enumerate(self.frags):
+                        print('-\t agglomerate {i}:')
                         self.grain_threshs.append(thresh.th_entropy_lesf(frag))
                 elif method == 'moments':
                     print('\t calling th_moments()')
-                    for frag in self.frags:
+                    for i, frag in enumerate(self.frags):
+                        print('-\t agglomerate {i}:')
                         self.grain_threshs.append(thresh.th_moments(frag))
 
                 for i, grain_thresh in enumerate(self.grain_threshs):

@@ -11,12 +11,15 @@ def th_entropy_lesf(frag, nbins=65536):
     """
     # Get the maximum value for the dtype of the image
     max_value = np.iinfo(frag.dtype).max
+
+    print('--\t calculating histogram...')
     # probably apply medium filter before threshold
     hist, _ = np.histogram(frag, bins=nbins, range=(0, max_value))
 
     vec_E = np.zeros(nbins)
     vec_A = np.zeros(nbins)
 
+    print('--\t calculating vec ...')
     for i in range(nbins):
         vec_E[i] = E(hist, i)
         vec_A[i] = A(hist, i)
@@ -28,6 +31,7 @@ def th_entropy_lesf(frag, nbins=65536):
     vec = (vec_E / vec_A - vec_Alog +
            (E(hist, nbins - 1) - vec_E) / vec_A_norm - vec_Alog_norm)
 
+    print('--\t finding min and regional min ...')
     # Find the threshold
     ind = np.nanargmin(vec)
     peaks, properties = find_peaks(-vec, prominence=True)
@@ -52,9 +56,11 @@ def th_moments(frag, nbins=65536):
     # Get the maximum value for the dtype of the image
     max_value = np.iinfo(frag.dtype).max
     # probably apply medium filter before threshold
+    print('--\t calculating histogram...')
     hist, _ = np.histogram(frag, bins=nbins, range=(0, max_value))
     hist = hist.astype(np.float64)
 
+    print('--\t calculating vec ...')
     Avec = np.zeros(nbins)
     total_sum = A(hist, nbins - 1)
 
@@ -72,6 +78,7 @@ def th_moments(frag, nbins=65536):
     x0 = 0.5 - (B(hist, nbins - 1) / A(hist, nbins - 1) + x2 / 2) / \
         np.sqrt(x2**2 - 4 * x1)
 
+    print('--\t finding min ...')
     ind = np.nanargmin(abs(Avec-x0))
 
     return ind

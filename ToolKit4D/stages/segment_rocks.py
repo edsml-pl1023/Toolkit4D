@@ -19,6 +19,7 @@ def segment_rocks(mask: np.ndarray, d_sample: int = 4, connectivity: int = 2,
     # downsample the mask
     downsampled_mask = mask[::d_sample, ::d_sample, ::d_sample]
 
+    print('--\t filtering out small objects ...')
     # Derive connected objects
     labeled_img = label(downsampled_mask, connectivity=connectivity)
     # Compute the properties of each connected component using regionprops
@@ -28,6 +29,7 @@ def segment_rocks(mask: np.ndarray, d_sample: int = 4, connectivity: int = 2,
         if prop.area < min_obj_size:
             downsampled_mask[labeled_img == prop.label] = False
 
+    print('--\t filling holes of the image ...')
     # may need to add del mask fill to save ram
     for slice_idx in [0, downsampled_mask.shape[2] - 1]:
         mask_fill = binary_fill_holes(downsampled_mask[:, :, slice_idx])
@@ -35,6 +37,7 @@ def segment_rocks(mask: np.ndarray, d_sample: int = 4, connectivity: int = 2,
     # Fill holes in the entire 3D image
     downsampled_mask = binary_fill_holes(downsampled_mask)
 
+    print('--\t finding largest "air" object ...')
     # Derive connected air objects
     labeled_img_air = label(~downsampled_mask, connectivity=connectivity)
     # Compute the properties of each connected component using regionprops
@@ -48,6 +51,7 @@ def segment_rocks(mask: np.ndarray, d_sample: int = 4, connectivity: int = 2,
     for island_label in island_labels:
         downsampled_mask[labeled_img_air == island_label] = True
 
+    print('--\t do image opening...')
     nhood = get_nhood(connectivity)
     downsampled_mask = binary_opening(downsampled_mask, structure=nhood)
 
