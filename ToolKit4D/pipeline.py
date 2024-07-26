@@ -98,7 +98,7 @@ class ToolKitPipeline:
             self.optimized_rock_mask = dio.tif_read(optimized_rock_mask_path)
 
         # Load agglomerate_masks
-        self.agglomerate_masks = []
+        agglomerate_masks = []
         i = 0
         while True:
             agglomerate_mask_path = os.path.join(self.image_folder,
@@ -110,9 +110,11 @@ class ToolKitPipeline:
                 i += 1
             else:
                 break
+        if agglomerate_masks:
+            self.agglomerate_masks = agglomerate_masks
 
         # Load frags
-        self.frags = []
+        frags = []
         i = 0
         while True:
             frag_path = os.path.join(self.image_folder,
@@ -123,10 +125,12 @@ class ToolKitPipeline:
                 i += 1
             else:
                 break
+        if frags:
+            self.frags = frags
 
         # Load grain_threshs and grain_thresh_masks
-        self.grain_threshs = []
-        self.grain_thresh_masks = []
+        grain_threshs = []
+        grain_thresh_masks = []
         i = 0
         while True:
             grain_thresh_path = os.path.join(self.threshold_folder,
@@ -145,6 +149,10 @@ class ToolKitPipeline:
                 i += 1
             else:
                 break
+        if grain_threshs:
+            self.grain_threshs = grain_threshs
+        if grain_thresh_masks:
+            self.grain_thresh_masks = grain_thresh_masks
 
     def _read_raw(self):
         """_summary_
@@ -240,6 +248,7 @@ class ToolKitPipeline:
                                  self.optimized_rock_mask)
 
     def separate_rocks(self, suppress_percentage: int = 10,
+                       min_obj_size: int = 5000,
                        del_attr: bool = False, save: bool = False):
         """_summary_
 
@@ -254,7 +263,8 @@ class ToolKitPipeline:
             print('\t calling separate_rocks()')
             self.agglomerate_masks = st.separate_rocks(
                 self.optimized_rock_mask,
-                suppress_percentage=suppress_percentage)
+                suppress_percentage=suppress_percentage,
+                min_obj_size=min_obj_size)
             if save:
                 for i, agglomerate_mask in enumerate(self.agglomerate_masks):
                     tifffile.imwrite(

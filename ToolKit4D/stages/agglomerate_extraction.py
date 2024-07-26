@@ -29,8 +29,10 @@ def agglomerate_extraction(optimized_mask: np.ndarray, raw: np.ndarray,
     print('\t -- upsizing the mask ...')
     # upsizing optimized_mask to raw image dimension
     optimized_mask_int = optimized_mask.astype(int)
-    optimized_mask_full = resize(optimized_mask_int, raw.shape, order=1,
-                                 preserve_range=True, anti_aliasing=True)
+    # optimized_mask_full = resize(optimized_mask_int, raw.shape, order=1,
+    #                              preserve_range=True, anti_aliasing=True)
+    optimized_mask_full = resize(optimized_mask_int, raw.shape, order=0,
+                                 preserve_range=True, anti_aliasing=False)
     optimized_mask_full = (optimized_mask_full > 0.5).astype(bool)
 
     print('\t -- finding bounding box ...')
