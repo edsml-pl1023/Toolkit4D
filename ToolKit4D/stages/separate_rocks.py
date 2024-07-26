@@ -51,23 +51,23 @@ def separate_rocks(optimized_mask, suppress_percentage: int = 10,
         _type_: _description_
     """
     agglomerates = []
-    print('--\t distance map processing ...')
+    print('\t -- distance map processing ...')
     height_map = -distance_transform_edt(optimized_mask)
     height_map[~optimized_mask] = -np.inf
     height_unique = np.unique(-height_map)
     height_10percent = height_unique[-2] / suppress_percentage
     height_map_aux = imhmin(height_map, height_10percent)
 
-    print('--\t finding regional minima as marker ...')
+    print('\t -- finding regional minima as marker ...')
     regional_min = local_minima(height_map_aux)
     markers = label(regional_min)
-    print('--\t watershed segmenting ...')
+    print('\t -- watershed segmenting ...')
     labels = watershed(height_map_aux, markers)
     unique_labels = np.unique(labels)
     object_lables = np.delete(unique_labels,
                               np.where(unique_labels == 1)[0])
     agglomerates = []
-    print('--\t removing small agglomerates ...')
+    print('\t -- removing small agglomerates ...')
     for object_label in object_lables:
         label_mask = (labels == object_label)
         # Filter out small agglomerates

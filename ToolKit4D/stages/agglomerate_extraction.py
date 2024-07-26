@@ -16,7 +16,7 @@ def agglomerate_extraction(optimized_mask: np.ndarray, raw: np.ndarray,
     Returns:
         _type_: _description_
     """
-    print('--\t filtering out small objects ...')
+    print('\t -- filtering out small objects ...')
     # Derive connected objects
     labeled_img = label(optimized_mask, connectivity=connectivity)
     # Compute the properties of each connected component using regionprops
@@ -26,14 +26,14 @@ def agglomerate_extraction(optimized_mask: np.ndarray, raw: np.ndarray,
         if prop.area < min_obj_size:
             optimized_mask[labeled_img == prop.label] = False
 
-    print('--\t upsizing the mask ...')
+    print('\t -- upsizing the mask ...')
     # upsizing optimized_mask to raw image dimension
     optimized_mask_int = optimized_mask.astype(int)
     optimized_mask_full = resize(optimized_mask_int, raw.shape, order=1,
                                  preserve_range=True, anti_aliasing=True)
     optimized_mask_full = (optimized_mask_full > 0.5).astype(bool)
 
-    print('--\t finding bounding box ...')
+    print('\t -- finding bounding box ...')
     # Determine the size of the image
     x, y, z = optimized_mask_full.shape
     top, bottom, left, right, front, back = 0, 0, 0, 0, 0, 0
@@ -74,7 +74,7 @@ def agglomerate_extraction(optimized_mask: np.ndarray, raw: np.ndarray,
     right = min(raw.shape[1], right)
     back = min(raw.shape[2], back)
 
-    print('--\t extracting frag ...')
+    print('\t -- extracting frag ...')
     frag_raw = raw[top:bottom+1, left:right+1, front:back+1]
     bw_full = optimized_mask_full[top:bottom+1, left:right+1, front:back+1]
     frag = frag_raw * bw_full.astype(np.uint16)

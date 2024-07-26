@@ -24,7 +24,7 @@ def remove_cylinder(img, ring_rad, ring_frac):
     radii = []
 
     for i, frac in enumerate(slices):
-        print(f'--\t finding {i+1} slice circle ...')
+        print(f'\t -- finding {i+1} slice circle ...')
         slice_idx = round(img.shape[2] * frac)
         pos, radius = detect_ring(img[:, :, slice_idx], inner_radius,
                                   outer_radius)
@@ -42,7 +42,7 @@ def remove_cylinder(img, ring_rad, ring_frac):
     incp_x_list = []
     incp_y_list = []
 
-    print('--\t finding slope and incp ...')
+    print('\t -- finding slope and incp ...')
     for i in range(num_samples - 1):
         p1 = [round(img.shape[2] * slices[i]), positions[i][0]]
         p2 = [round(img.shape[2] * slices[i+1]), positions[i+1][0]]
@@ -66,7 +66,7 @@ def remove_cylinder(img, ring_rad, ring_frac):
     ring_centres[:, 1] = slices * grad_y + incp_y
 
     # Loop through masking
-    print('--\t removing circles at each slice ...')
+    print('\t -- removing circles at each slice ...')
     mask_siz = [img.shape[0], img.shape[1]]
     for i in range(img.shape[2]):
         slice_mask = create_mask(mask_siz, ring_centres[i], ring_rad)

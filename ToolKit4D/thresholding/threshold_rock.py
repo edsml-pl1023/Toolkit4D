@@ -35,11 +35,11 @@ def threshold_rock(raw_file=None, raw_image=None, nbins=256):
     # Get the maximum value for the dtype of the image
     max_value = np.iinfo(raw.dtype).max
 
-    print('--\t calculating histogram ...')
+    print('\t -- calculating histogram ...')
     # probably apply medium filter before threshold
     hist, _ = np.histogram(raw, bins=nbins, range=(0, max_value))
 
-    print('--\t finding otsu threshold ...')
+    print('\t -- finding otsu threshold ...')
     ret = filters.threshold_otsu(hist=hist)
 
     return ret * (max_value / (nbins - 1))
