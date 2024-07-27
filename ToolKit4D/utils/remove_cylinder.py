@@ -13,7 +13,7 @@ def remove_cylinder(img, ring_rad, ring_frac):
                   slice at z direction (in pixels)
         ring_frac: ratio between the outer radius and inner radius
     """
-
+    img = np.copy(img)
     inner_radius = ring_rad
     outer_radius = round(ring_rad * ring_frac)
 

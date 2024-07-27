@@ -16,6 +16,7 @@ def agglomerate_extraction(optimized_mask: np.ndarray, raw: np.ndarray,
     Returns:
         _type_: _description_
     """
+    optimized_mask = np.copy(optimized_mask)
     print('\t -- filtering out small objects ...')
     # Derive connected objects
     labeled_img = label(optimized_mask, connectivity=connectivity)
