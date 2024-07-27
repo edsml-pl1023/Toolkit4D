@@ -105,7 +105,7 @@ class ToolKitPipeline:
                                                  self.identifier +
                                                  f'_agglomerates_mask_{i}.tif')
             if os.path.exists(agglomerate_mask_path):
-                self.agglomerate_masks.append(dio.tif_read(
+                agglomerate_masks.append(dio.tif_read(
                     agglomerate_mask_path))
                 i += 1
             else:
@@ -121,7 +121,7 @@ class ToolKitPipeline:
                                      self.identifier +
                                      f'_frag_{i}.tif')
             if os.path.exists(frag_path):
-                self.frags.append(dio.tif_read(frag_path))
+                frags.append(dio.tif_read(frag_path))
                 i += 1
             else:
                 break
@@ -143,8 +143,8 @@ class ToolKitPipeline:
             if os.path.exists(grain_thresh_path) and (
                os.path.exists(grain_thresh_mask_path)):
                 with open(grain_thresh_path, 'r') as file:
-                    self.grain_threshs.append(float(file.read().strip()))
-                self.grain_thresh_masks.append(dio.grain_mask_read(
+                    grain_threshs.append(float(file.read().strip()))
+                grain_thresh_masks.append(dio.grain_mask_read(
                     grain_thresh_mask_path))
                 i += 1
             else:
