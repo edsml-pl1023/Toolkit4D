@@ -40,7 +40,7 @@ def imhmin(img, H):
 
 
 def separate_rocks(optimized_mask, suppress_percentage: int = 10,
-                   min_obj_size: int = 5000):
+                   min_obj_size: int = 5000, num_agglomerates: int = 10):
     """_summary_
 
     Args:
@@ -66,11 +66,16 @@ def separate_rocks(optimized_mask, suppress_percentage: int = 10,
     unique_labels = np.unique(labels)
     object_lables = np.delete(unique_labels,
                               np.where(unique_labels == 1)[0])
-    agglomerates = []
+    agglomerates_with_size = []
     print('\t -- removing small agglomerates ...')
     for object_label in object_lables:
         label_mask = (labels == object_label)
         # Filter out small agglomerates
-        if np.sum(label_mask) >= min_obj_size:
-            agglomerates.append(label_mask)
+        label_size = np.sum(label_mask)
+        if label_size >= min_obj_size:
+            agglomerates_with_size.append((label_mask, label_size))
+            agglomerates_with_size.sort(key=lambda x: x[1], reverse=True)
+            # will only take maximum 10 agglomerates (help in ml)
+            top_agglomerates = agglomerates_with_size[:num_agglomerates]
+            agglomerates = [mask for mask, _ in top_agglomerates]
     return agglomerates
