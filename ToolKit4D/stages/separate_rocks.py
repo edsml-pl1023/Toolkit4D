@@ -79,3 +79,36 @@ def separate_rocks(optimized_mask, suppress_percentage: int = 10,
             top_agglomerates = agglomerates_with_size[:num_agglomerates]
             agglomerates = [mask for mask, _ in top_agglomerates]
     return agglomerates
+
+
+def binary_search_agglomerates(num_agglomerates, min_obj_size,
+                               optimized_rock_mask):
+    left, right = 1.0, 100.0  # The range for suppress_percentage
+    best_agglomerate_masks = None
+    best_diff = float('inf')
+
+    while right - left > 0.01:
+        mid = (left + right) / 2.0
+        suppress_percentage = mid  # Using mid directly as the percentage
+
+        agglomerate_masks = separate_rocks(
+            optimized_rock_mask,
+            suppress_percentage=suppress_percentage,
+            min_obj_size=min_obj_size
+        )
+
+        output_length = len(agglomerate_masks)
+
+        if output_length == num_agglomerates:
+            return agglomerate_masks
+        elif output_length > num_agglomerates:
+            right = mid - 0.01  # Adjust right boundary
+        else:
+            left = mid + 0.01  # Adjust left boundary
+
+        diff = abs(output_length - num_agglomerates)
+        if diff < best_diff:
+            best_diff = diff
+            best_agglomerate_masks = agglomerate_masks
+
+    return best_agglomerate_masks

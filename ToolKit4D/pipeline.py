@@ -250,7 +250,8 @@ class ToolKitPipeline:
 
     def separate_rocks(self, suppress_percentage: int = 10,
                        min_obj_size: int = 5000, ML: bool = False,
-                       del_attr: bool = False, save: bool = False):
+                       del_attr: bool = False, save: bool = False,
+                       num_agglomerates=None):
         """_summary_
 
         Args:
@@ -262,30 +263,35 @@ class ToolKitPipeline:
         if not hasattr(self, 'agglomerate_masks'):
             print('-----Separate Agglomerates-----')
             print('\t calling separate_rocks()')
-            agglomerate_masks = st.separate_rocks(
-                self.optimized_rock_mask,
-                suppress_percentage=suppress_percentage,
-                min_obj_size=min_obj_size)
-            if ML:
-                # agglomerate_masks_ml = []
-                # num_agglomerates = mlTools.predicting.predict_NumAgglomerates(
-                #     network, self.optimized_rock_mask)
-                # combinations = mlTools.utils.find_combination(len(agglomerate_mask))
-                # agglomerates_comb = {combination: 0 for combination in combinations}
-                # for combination in agglomerates_comb:
-                #     agglomerate = mlTools.dataset.mask_integrator(
-                #         combination, agglomerate_masks)
-                #     agglomerate_comb{combination} = (
-                #         mlTools.predicting.predict_prominence(network, agglomerate))
-                # combinations = (
-                #     mlTools.utils.get_top_combination(agglomerate_comb, num_agglomerates))
-                # for combination in combinations:
-                #     agglomerate_masks_ml.append(
-                #         mlTools.dataset.mask_integrator(combination, agglomerate_masks))
-                # self.agglomerate_masks = agglomerate_masks_ml
-                pass
+            if num_agglomerates:
+                self.agglomerate_masks = st.binary_search_agglomerates(
+                    num_agglomerates, min_obj_size, self.optimized_rock_mask
+                    )
             else:
-                self.agglomerate_masks = agglomerate_masks
+                self.agglomerate_masks = st.separate_rocks(
+                    self.optimized_rock_mask,
+                    suppress_percentage=suppress_percentage,
+                    min_obj_size=min_obj_size)
+            # if ML:
+            #     # agglomerate_masks_ml = []
+            #     # num_agglomerates = mlTools.predicting.predict_NumAgglomerates(
+            #     #     network, self.optimized_rock_mask)
+            #     # combinations = mlTools.utils.find_combination(len(agglomerate_mask))
+            #     # agglomerates_comb = {combination: 0 for combination in combinations}
+            #     # for combination in agglomerates_comb:
+            #     #     agglomerate = mlTools.dataset.mask_integrator(
+            #     #         combination, agglomerate_masks)
+            #     #     agglomerate_comb{combination} = (
+            #     #         mlTools.predicting.predict_prominence(network, agglomerate))
+            #     # combinations = (
+            #     #     mlTools.utils.get_top_combination(agglomerate_comb, num_agglomerates))
+            #     # for combination in combinations:
+            #     #     agglomerate_masks_ml.append(
+            #     #         mlTools.dataset.mask_integrator(combination, agglomerate_masks))
+            #     # self.agglomerate_masks = agglomerate_masks_ml
+            #     pass
+            # else:
+            #     self.agglomerate_masks = agglomerate_masks
             if save:
                 for i, agglomerate_mask in enumerate(self.agglomerate_masks):
                     tifffile.imwrite(
