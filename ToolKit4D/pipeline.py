@@ -249,7 +249,7 @@ class ToolKitPipeline:
                                  self.optimized_rock_mask)
 
     def separate_rocks(self, suppress_percentage: int = 10,
-                       min_obj_size: int = 5000, ML: bool = False,
+                       min_obj_size: int = 1000, ML: bool = False,
                        del_attr: bool = False, save: bool = False,
                        num_agglomerates=None):
         """_summary_
@@ -267,11 +267,35 @@ class ToolKitPipeline:
                 self.agglomerate_masks = st.binary_search_agglomerates(
                     num_agglomerates, min_obj_size, self.optimized_rock_mask
                     )
+            # THIS METHOD: DO MULTIPLE TIMES OF SEGMENTATION; MORE TRAINING
+            # DATA THAT IS: IF NOT SATISIFED; DO SEGMENTATION AGAIN (THE
+            # LATER: IF NOT SATISFIED: REFINE THIS SEGMENTATION)
+            elif ML:
+                # start from 3 to overcome under-segmentation
+                # To avoid over-segmentation: set the max guess (15)
+                # ALso,
+                guess = 3
+                guess_incr = -1
+                while guess_incr and guess <= 15:
+                    agglomerate_masks = st.binary_search_agglomerates(
+                        guess, min_obj_size,
+                        self.optimized_rock_mask)
+                    guess_incr = 0
+                    for agglomerate in agglomerate_masks:
+                        num_agglomerates = (
+                            mlTools.predicting.predict_NumAgglomerates(
+                            ))
+                        # with pure increasing
+                        guess_incr += num_agglomerates - 1
+                    guess += guess_incr
             else:
                 self.agglomerate_masks = st.separate_rocks(
                     self.optimized_rock_mask,
                     suppress_percentage=suppress_percentage,
                     min_obj_size=min_obj_size)
+            # THIS METHOD: DO ML ON OPTIMIZED ROCK MASK, AND AIM TO DO ONE
+            # STEP SEGMENTATION OR ONE TIME SEGMENTATION AND COBINE; ALSO,
+            # THE TRAINING DATA IS LIMITED
             # if ML:
             #     # agglomerate_masks_ml = []
             #     # num_agglomerates = mlTools.predicting.predict_NumAgglomerates(

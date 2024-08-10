@@ -40,7 +40,7 @@ def imhmin(img, H):
 
 
 def separate_rocks(optimized_mask, suppress_percentage: int = 10,
-                   min_obj_size: int = 5000, num_agglomerates: int = 10):
+                   min_obj_size: int = 1000, num_agglomerates: int = 10):
     """_summary_
 
     Args:
