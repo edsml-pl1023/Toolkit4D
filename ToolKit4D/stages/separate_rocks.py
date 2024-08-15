@@ -87,7 +87,7 @@ def binary_search_agglomerates(num_agglomerates, min_obj_size,
     best_agglomerate_masks = None
     best_diff = float('inf')
 
-    while right - left > 0.01:
+    while right - left > 0.1:
         mid = (left + right) / 2.0
         suppress_percentage = mid  # Using mid directly as the percentage
 
@@ -102,9 +102,9 @@ def binary_search_agglomerates(num_agglomerates, min_obj_size,
         if output_length == num_agglomerates:
             return agglomerate_masks
         elif output_length > num_agglomerates:
-            right = mid - 0.01  # Adjust right boundary
+            right = mid - 0.1  # Adjust right boundary
         else:
-            left = mid + 0.01  # Adjust left boundary
+            left = mid + 0.1  # Adjust left boundary
 
         diff = abs(output_length - num_agglomerates)
         if diff < best_diff:
