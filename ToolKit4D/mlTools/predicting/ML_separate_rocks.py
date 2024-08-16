@@ -3,8 +3,8 @@ from .predict_NumAgglomerates import predict_NumAgglomerates
 
 
 def recursive_agglomerate_search(guess, min_obj_size, initial_mask,
-                                 max_agglomerates=14, max_depth=2,
-                                 current_depth=0):
+                                 model, max_agglomerates=14,
+                                 max_depth=2, current_depth=0):
     # Perform binary search agglomeration
     agglomerate_masks = binary_search_agglomerates(
         guess, min_obj_size, initial_mask
@@ -15,8 +15,10 @@ def recursive_agglomerate_search(guess, min_obj_size, initial_mask,
 
     # Iterate through each agglomerate mask in the list
     for agglomerate in agglomerate_masks:
+        print(f'\t -- At depth {current_depth}')
         # Predict the number of agglomerates in this mask
         num_agglomerates = predict_NumAgglomerates(agglomerate)
+        print(f'\t -- ML detect {num_agglomerates} agglomerates')
 
         # If the number of agglomerates is 1, we stop the recursion
         # for this mask
@@ -27,7 +29,7 @@ def recursive_agglomerate_search(guess, min_obj_size, initial_mask,
             # recursively apply the function
             if current_depth < max_depth:
                 next_agglomerates = recursive_agglomerate_search(
-                    num_agglomerates, min_obj_size, agglomerate,
+                    num_agglomerates, min_obj_size, agglomerate, model,
                     max_agglomerates, max_depth, current_depth + 1
                 )
                 final_agglomerates.extend(next_agglomerates)

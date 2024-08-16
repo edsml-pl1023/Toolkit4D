@@ -8,7 +8,9 @@ import gc
 import warnings
 import numpy as np
 import tifffile
+import torch
 from typing import Literal
+from ToolKit4D.mlTools.model import CompactUNet3D
 
 # 1. write the basic structure
 # 2. add clean ram inside class and compare the saving of ram
@@ -270,9 +272,16 @@ class ToolKitPipeline:
             elif ML:
                 # start from 5 to overcome under-segmentation
                 # To avoid over-segmentation: set the max guess (15)
+                model = CompactUNet3D(n_channels=1)
+                model.load_state_dict(
+                    torch.load('./model/compact_bs16_epoch17.pth',
+                               map_location=torch.device('cpu')))
+                print('\t -- model loaded successfully')
                 guess = 5
-                mlTools.predicting.recursive_agglomerate_search(
-                    guess, min_obj_size, self.optimized_rock_mask)
+                self.agglomerate_masks = (
+                    mlTools.predicting.recursive_agglomerate_search(
+                        guess, min_obj_size, self.optimized_rock_mask, model))
+
             else:
                 self.agglomerate_masks = st.separate_rocks(
                     self.optimized_rock_mask,
