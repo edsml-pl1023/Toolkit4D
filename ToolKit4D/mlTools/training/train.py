@@ -8,7 +8,8 @@ import torch
 import numpy as np
 
 
-def train(model, optimizer, criterion, data_loader, device, classification=False):
+def train(model, optimizer, criterion, data_loader, device,
+          classification=False):
     model.train()
     train_loss, train_accuracy = 0, 0
     for X, y in tqdm(data_loader):
@@ -91,7 +92,7 @@ def evaluate(model, data_loader, device, classification=False):
     return np.concatenate(y_preds, 0),  np.concatenate(ys, 0)
 
 
-def train_model(model, lr, momentum, train_loader,
+def train_model(model, lr, momentum, epoch, train_loader,
                 val_loader, device, classification=False):
     set_seed(42)
     model = model.to(device)
@@ -104,18 +105,18 @@ def train_model(model, lr, momentum, train_loader,
 
     liveloss = PlotLosses()
     try:
-        for epoch in range(12):
+        for epoch in range(epoch):
             logs = {}
             train_loss, train_accuracy = train(
                 model, optimizer, criterion, train_loader,
-                classification=classification)
+                device, classification=classification)
 
             logs['' + 'log loss'] = train_loss.item()
             logs['' + 'accuracy'] = train_accuracy.item()
 
             validation_loss, validation_accuracy = validate(
                 model, criterion, val_loader,
-                classification=classification)
+                device, classification)
 
             logs['val_' + 'log loss'] = validation_loss.item()
             logs['val_' + 'accuracy'] = validation_accuracy.item()

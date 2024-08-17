@@ -1,5 +1,6 @@
 from ...stages.separate_rocks import binary_search_agglomerates
 from .predict_NumAgglomerates import predict_NumAgglomerates
+import numpy as np
 
 
 def recursive_agglomerate_search(guess, min_obj_size, initial_mask,
@@ -41,6 +42,9 @@ def recursive_agglomerate_search(guess, min_obj_size, initial_mask,
         # If we have reached or exceeded the maximum number
         # of agglomerates, stop and return
         if len(final_agglomerates) >= max_agglomerates:
-            return final_agglomerates[:max_agglomerates]
+            final_agglomerates_sorted = sorted(
+                final_agglomerates, key=lambda x: np.sum(x), reverse=True)
+            return final_agglomerates_sorted[:max_agglomerates]
+            # return final_agglomerates[:max_agglomerates]
 
     return final_agglomerates
