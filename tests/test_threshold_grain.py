@@ -29,6 +29,7 @@ def test_entropy():
         for raw_file in raw_files:
             img_processor = ToolKitPipeline(raw_file)
             img_processor.segment_rocks()
+            img_processor.remove_cylinder(ring_rad=99, ring_frac=1.5)
             frag_python = agglomerate_extraction(
                 img_processor.optimized_rock_mask,
                 img_processor.raw)

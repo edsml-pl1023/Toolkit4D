@@ -166,7 +166,7 @@ class ToolKitPipeline:
         raw = dio.read_raw(self.rawfile, self.im_size, self.im_type)
         return raw
 
-    def threshold_rock(self, del_attr: bool = False, save: bool = False):
+    def threshold_rock(self, save: bool = False):
         """_summary_
 
         Args:
@@ -188,7 +188,7 @@ class ToolKitPipeline:
                           '_rock_thresh.txt', 'w') as file:
                     file.write(str(self.rock_thresh))
 
-    def remove_cylinder(self, ring_rad: int = 99, ring_frac: float = 1.5,
+    def remove_cylinder(self, ring_rad: int = 792, ring_frac: float = 1.2,
                         del_attr: bool = False, save: bool = False):
         """_summary_
 
@@ -214,7 +214,7 @@ class ToolKitPipeline:
                                  )
 
     def segment_rocks(self, remove_cylinder: bool = True,
-                      min_obj_size: int = 2, del_attr: bool = False,
+                      min_obj_size: int = 1000, del_attr: bool = False,
                       save: bool = False):
         """
         different from Matlab code; Matlab: downsample from raw then
@@ -273,9 +273,11 @@ class ToolKitPipeline:
                 # start from 5 to overcome under-segmentation
                 # To avoid over-segmentation: set the max guess (15)
                 model = CompactUNet3D(n_channels=1)
-                model.load_state_dict(
-                    torch.load('./model/compact_bs16_epoch17.pth',
-                               map_location=torch.device('cpu')))
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    model.load_state_dict(
+                        torch.load('./model/compact_bs32_epoch25_p.pth',
+                                   map_location=torch.device('cpu')))
                 print('\t -- model loaded successfully')
                 guess = 5
                 self.agglomerate_masks = (
@@ -294,7 +296,7 @@ class ToolKitPipeline:
                         f'_agglomerates_mask_{i}.tif',
                         agglomerate_mask)
 
-    def agglomerate_extraction(self, min_obj_size: int = 2,
+    def agglomerate_extraction(self, min_obj_size: int = 1000,
                                del_attr: bool = False, save: bool = False):
         """_summary_
 
@@ -324,7 +326,8 @@ class ToolKitPipeline:
 
         Args:
             method (str): either 'entropy' or 'moments'
-            del_attr (bool, optional): _description_. delete attributes not used in this and the following functions
+            del_attr (bool, optional): _description_. delete attributes
+            not used in this and the following functions
             Defaults to False.
             save (bool, optional): _description_. Defaults to False.
         """

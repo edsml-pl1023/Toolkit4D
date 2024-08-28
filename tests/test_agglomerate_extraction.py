@@ -19,6 +19,7 @@ def test_similarity():
     for raw_file in raw_files:
         img_processor = ToolKitPipeline(raw_file)
 
+        img_processor.remove_cylinder(ring_rad=99, ring_frac=1.5)
         img_processor.segment_rocks()
         frag_matlab = mat_data['data'][img_processor.identifier][0][0]
 

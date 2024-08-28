@@ -15,6 +15,7 @@ def test_segment_rocks():
     # use these three lists to maintain index info for raw_files
     for raw_file in raw_files:
         img_processor = ToolKitPipeline(raw_file)
+        img_processor.remove_cylinder(ring_rad=99, ring_frac=1.5)
         img_processor.segment_rocks()
         opMask_matlab = mat_data['data'][img_processor.identifier][0][0]
         opMask_python = img_processor.optimized_rock_mask

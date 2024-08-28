@@ -7,6 +7,7 @@ def test_mask_overlap():
     LA2d0 = ToolKitPipeline(
         './tests/test_data/LA2_d0_v1_uint16_unnormalised_254_254_254.raw'
         )
+    LA2d0.remove_cylinder(ring_rad=99, ring_frac=1.2)
     LA2d0.separate_rocks()
     for indices_combination in find_combination(len(LA2d0.agglomerate_masks)):
         if len(indices_combination) != 1:
