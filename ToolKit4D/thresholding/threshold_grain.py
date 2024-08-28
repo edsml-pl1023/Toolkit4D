@@ -95,15 +95,16 @@ def A(hist, i):
 
 
 def B(hist, i):
-    # default i is nbins-1=65535
-    return np.dot(np.arange(i + 1), hist[:i + 1])
+    indices = np.arange(i + 1, dtype=np.int64)
+    return np.dot(indices, hist[:i + 1])
 
 
 def C(hist, i):
-    # default i is nbins-1=65535
-    return np.dot((np.arange(i + 1)**2), hist[:i + 1])
+    indices = np.arange(i + 1, dtype=np.int64)
+    return np.dot(indices**2, hist[:i + 1])
 
 
 def D(hist, i):
     # default i is nbins-1=65535
-    return np.dot((np.arange(i + 1)**3), hist[:i + 1])
+    indices = np.arange(i + 1, dtype=np.int64)
+    return np.dot(indices**3, hist[:i + 1])
