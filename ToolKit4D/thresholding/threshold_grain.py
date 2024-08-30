@@ -1,13 +1,32 @@
+# Peiyi Leng; edsml-pl1023
 import numpy as np
 from scipy.signal import find_peaks
 
 
 def th_entropy_lesf(frag, nbins=65536):
-    """_summary_
+    """
+    Calculate the threshold of an image fragment using the maximum
+    entropy method.
+
+    This function computes a threshold for the input image fragment (`frag`) by
+    analyzing its histogram with the maximum entropy method.
+    The process involves:
+    - Calculating the histogram of the image fragment.
+    - Computing entropy (`vec_E`) and cumulative probability (`vec_A`) vectors.
+    - Normalizing these vectors and combining them to find the threshold
+      that maximizes the entropy.
 
     Args:
-        frag (_type_): _description_
-        nbins (_type_): _description_
+        frag (numpy.ndarray): The image fragment for which to calculate the
+                              threshold. The fragment should be a NumPy array
+                              with an integer data type.
+        nbins (int, optional): The number of bins to use for the histogram
+                               calculation. The default is 65536, suitable for
+                               16-bit images.
+
+    Returns:
+        int: The index representing the calculated threshold value within the
+        histogram bins.
     """
     # Get the maximum value for the dtype of the image
     max_value = np.iinfo(frag.dtype).max
@@ -46,11 +65,30 @@ def th_entropy_lesf(frag, nbins=65536):
 
 
 def th_moments(frag, nbins=65536):
-    """_summary_
+    """
+    Calculate the threshold of an image fragment using the moments method.
+
+    This function computes a threshold for the input image fragment (`frag`)
+    by analyzing
+    its histogram using the moments algorithm. The moments method involves:
+    - Calculating the histogram of the image fragment.
+    - Computing moments of the histogram to find parameters (`x0`, `x1`, and
+      `x2`) that describe the histogram's distribution.
+    - Using these parameters to determine the threshold that best represents
+      the image data.
 
     Args:
-        frag (_type_): _description_
-        nbins (int, optional): _description_. Defaults to 65536.
+        frag (numpy.ndarray): The image fragment for which to calculate the
+                              threshold.
+                              The fragment should be a NumPy array with an
+                              integer data type.
+        nbins (int, optional): The number of bins to use for the histogram
+                               calculation. Defaults to 65536, suitable for
+                               16-bit images.
+
+    Returns:
+        int: The index representing the calculated threshold value within the
+             histogram bins.
     """
 
     # Get the maximum value for the dtype of the image

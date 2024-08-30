@@ -1,3 +1,4 @@
+# Peiyi Leng; edsml-pl1023
 import numpy as np
 from scipy.ndimage import distance_transform_edt
 from skimage.morphology import reconstruction, local_minima
@@ -7,15 +8,19 @@ from skimage.segmentation import watershed
 
 def imcomplement(image):
     """
-    Perform image complement of a grayscale image.
-    The resulting image and the original image should sum up to 1 element-wise.
-    For -np.inf, it should be np.inf in the complement.
+    Computes the complement of a grayscale image. The complement of each pixel
+    is calculated such that the original pixel value and its complement sum to
+    1, except for pixels with a value of `-np.inf`, which are mapped to
+    `np.inf` in the complement.
 
-    Parameters:
-    image (numpy.ndarray): The input grayscale image.
+    Args:
+        image (numpy.ndarray): The input grayscale image as a NumPy array.
 
     Returns:
-    numpy.ndarray: The complemented image.
+        numpy.ndarray: The complemented image, where each pixel is transformed
+        according to the rule:
+        - If the pixel value is `-np.inf`, it becomes `np.inf`.
+        - Otherwise, the pixel value is transformed to `1 - value`.
     """
     # Create the complemented image
     complemented_image = np.where(image == -np.inf, np.inf, 1 - image)
@@ -24,14 +29,24 @@ def imcomplement(image):
 
 
 def imhmin(img, H):
-    """_summary_
+    """
+    Perform H-minima transformation on an image to suppress shallow minima.
+
+    This function applies the H-minima transformation to an image, which
+    suppresses all minima in the grayscale image that are shallower than a
+    specified depth `H`. The process involves complementing the image,
+    performing morphological reconstruction, and then complementing the
+    result again.
 
     Args:
-        img (_type_): _description_
-        H (_type_): _description_
+        img (numpy.ndarray): The input grayscale image on which to perform
+                             the H-minima transformation.
+        H (float): The height threshold. Minima shallower than this value
+                   will be suppressed.
 
     Returns:
-        _type_: _description_
+        numpy.ndarray: The image after applying the H-minima transformation,
+                       with shallow minima removed.
     """
     img = imcomplement(img)
     img = reconstruction(img-H, img)
@@ -41,14 +56,30 @@ def imhmin(img, H):
 
 def separate_rocks(optimized_mask, suppress_percentage: int = 10,
                    min_obj_size: int = 1000, num_agglomerates: int = 10):
-    """_summary_
+    """
+    Separate and filter rock agglomerates in a binary mask using watershed
+    segmentation.
+
+    This function processes a binary mask to separate rock agglomerates using
+    a distance transform and watershed segmentation. It also filters out small
+    agglomerates and returns the largest detected ones based on the specified
+    parameters.
 
     Args:
-        optimized_mask (_type_): _description_
-        suppress_percentage (int, optional): _description_. Defaults to 10.
+        optimized_mask (numpy.ndarray): A binary mask where the rock
+                                        agglomerates are marked.
+        suppress_percentage (int, optional): The percentage used to suppress
+                                             shallow minima during the H-minima
+                                             transformation. Defaults to 10.
+        min_obj_size (int, optional): The minimum size (in pixels) for an
+                                      agglomerate to be considered valid.
+                                      Defaults to 1000.
+        num_agglomerates (int, optional): The maximum number of largest
+                                    agglomerates to return. Defaults to 10.
 
     Returns:
-        _type_: _description_
+        list[numpy.ndarray]: A list of binary masks, each representing one of
+                             the largest detected agglomerates.
     """
     agglomerates = []
     print('\t -- distance map processing ...')
@@ -83,6 +114,29 @@ def separate_rocks(optimized_mask, suppress_percentage: int = 10,
 
 def binary_search_agglomerates(num_agglomerates, min_obj_size,
                                optimized_rock_mask):
+    """
+    Perform a binary search to find the optimal suppression percentage that
+    yields a desired number of rock agglomerates.
+
+    This function uses a binary search approach to adjust the suppression
+    percentage used in the `separate_rocks` function, aiming to obtain a
+    specified number of rock agglomerates from a given binary mask. The
+    function returns the set of agglomerates that most closely matches the
+    desired count.
+
+    Args:
+        num_agglomerates (int): The target number of agglomerates to separate
+                                from the mask.
+        min_obj_size (int): The minimum size (in pixels) for an agglomerate to
+                            be considered valid.
+        optimized_rock_mask (numpy.ndarray): A binary mask where the rock
+                                             agglomerates are marked.
+
+    Returns:
+        list[numpy.ndarray]: A list of binary masks, each representing one of
+                             the agglomerates that most closely matches the
+                             desired count.
+    """
     left, right = 1.0, 100.0  # The range for suppress_percentage
     best_agglomerate_masks = None
     best_diff = float('inf')

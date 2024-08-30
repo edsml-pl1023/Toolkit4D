@@ -1,20 +1,33 @@
+# Peiyi Leng; edsml-pl1023
 import numpy as np
 from skimage.measure import label, regionprops
 from skimage.transform import resize
 
 
 def agglomerate_extraction(optimized_mask: np.ndarray, raw: np.ndarray,
-                           connectivity: int = 2, min_obj_size: int = 2):
-    """_summary_
+                           connectivity: int = 2, min_obj_size: int = 1000):
+    """
+    Extracts and processes agglomerates from a given mask by filtering
+    out small objects, resizing the mask to match the raw image dimensions,
+    and extracting the corresponding region from the raw image.
 
     Args:
-        optimized_mask (np.ndarray): _description_
-        raw (np.ndarray): _description_
-        connectivity (int, optional): _description_. Defaults to 2.
-        min_obj_size (int, optional): _description_. Defaults to 2.
+        optimized_mask (np.ndarray): Result from A 3D binary mask array
+        representing the segmented regions to be processed.
+
+        raw (np.ndarray): The original 3D image data from which the
+        agglomerate regions are to be extracted.
+        connectivity (int, optional): The connectivity criterion for labeling
+        connected components in the mask. Defaults to 2, which considers
+        18-connectivity in 3D.
+        min_obj_size (int, optional): The minimum size (in pixels/voxels) of
+        an object to be retained in the mask. Objects smaller than this size
+        will be removed. Defaults to 2.
 
     Returns:
-        _type_: _description_
+        np.ndarray: A 3D array representing the extracted agglomerate regions
+        from the raw image, with the same data type as the raw image but only
+        including the regions corresponding to the processed mask.
     """
     optimized_mask = np.copy(optimized_mask)
     print('\t -- filtering out small objects ...')

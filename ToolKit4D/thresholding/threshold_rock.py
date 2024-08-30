@@ -1,3 +1,4 @@
+# Peiyi Leng; edsml-pl1023
 import os
 import numpy as np
 from skimage import filters
@@ -5,15 +6,34 @@ from ..dataio.read_raw import read_raw
 
 
 def threshold_rock(raw_file=None, raw_image=None, nbins=256):
-    """_summary_
+    """
+    Calculate the Otsu threshold for a raw image using its histogram.
+
+    This function computes a threshold for the input image using Otsu's method,
+    which finds the threshold that minimizes the intra-class variance in the
+    histogram. The function can either read the image data from a file
+    (`raw_file`) or directly from a provided image array (`raw_image`). The
+    histogram is calculated with a specified number of bins (`nbins`), which
+    affects the precision and computation time of the thresholding.
 
     Args:
-        raw_file (str): complete path to a raw file.
-            e.g ./tests/test_data/LA2_d0_v1_uint16_unnormalized_254_254_254.raw
-        clean_path (str): basename of raw_file
-        file_name (str): (raw_file - basename); file_name[0]: without extension
-        nbins (int): decide histogram precision; larger takes longer
-        time to calculate
+        raw_file (str, optional): The complete path to a raw file containing
+            the image data. Example:
+            './tests/test_data/LA2_d0_v1_uint16_unnormalized_254_254_254.raw'.
+        raw_image (numpy.ndarray, optional): A NumPy array representing the
+            image data. Either `raw_file` or `raw_image` must be provided,
+            but not both.
+        nbins (int, optional): The number of bins to use for the histogram
+            calculation. A larger number of bins increases precision but
+            also the computation time. Defaults to 256.
+
+    Returns:
+        float: The calculated threshold value, scaled according to the maximum
+        value of the image data type.
+
+    Raises:
+        ValueError: If both `raw_file` and `raw_image` are provided, or if
+        neither is provided.
     """
     if raw_file is not None and raw_image is not None:
         raise ValueError('Provide only one: raw_file or raw_image.')

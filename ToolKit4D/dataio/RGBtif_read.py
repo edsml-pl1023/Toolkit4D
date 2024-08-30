@@ -1,15 +1,23 @@
+# Peiyi Leng; edsml-pl1023
 import numpy as np
 import tifffile
 
 
 def grain_mask_read(filename):
-    """_summary_
+    """
+    Reads a 4D RGB image file and converts it into a 3D mask
+    array based on specific color mappings.
 
     Args:
-        filename (_type_): _description_
+        filename (str): The path to the RGB image file to be read.
 
     Returns:
-        _type_: _description_
+        numpy.ndarray: A 3D integer array (mask) where each voxel value
+        is determined by the color in the corresponding pixel:
+            - 2: For pixels matching the bright blue color [0, 0, 255, 255]
+            - 1: For pixels matching the bright gray color [200, 200, 200, 255]
+            - 0: For pixels matching the transparent color [0, 0, 0, 0]
+
     """
     # Read the 4D RGB image
     rgb_image = tifffile.imread(filename)

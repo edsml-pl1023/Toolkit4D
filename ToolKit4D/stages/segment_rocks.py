@@ -1,3 +1,4 @@
+# Peiyi Leng; edsml-pl1023
 import numpy as np
 from skimage.measure import label, regionprops
 from scipy.ndimage import binary_fill_holes
@@ -5,16 +6,32 @@ from scipy.ndimage import binary_opening
 
 
 def segment_rocks(mask: np.ndarray, d_sample: int = 4, connectivity: int = 2,
-                  min_obj_size: int = 2):
-    """This function returns an optimized (downsampled /
-    remove small object / remove noise) mask
+                  min_obj_size: int = 1000):
+    """
+    Returns an optimized mask by downsampling, removing small objects,
+    filling holes, and performing morphological operations on the input mask.
 
     Args:
-        mask (np.ndarray): a binary mask from threshold_rock / remove_cylinder
-        d_sample (int, optional): _description_. Defaults to 4.
-        connectivity: 1 is 6; 2 is 18; 3 is 26
-        min_obj_size: initial: 1000*4*4*4; my downsampled test image (by 8):
-                      1000*4*4*4/(8*8*8)=125; my_down 4 agian: 125 / (4*4*4)=2
+        mask (np.ndarray): A 3D binary mask, typically derived from
+        thresholding operations include `threshold_rock` and `remove_cylinder`.
+
+        d_sample (int, optional): The downsampling factor. The mask will be
+        subsampled by this factor along each dimension. Defaults to 4.
+
+        connectivity (int, optional): The connectivity criterion used to
+        define connected components.
+            - 1: 6-connectivity in 3D.
+            - 2: 18-connectivity in 3D (default).
+            - 3: 26-connectivity in 3D.
+
+        min_obj_size (int, optional): The minimum size (in voxels) of objects
+        to retain in the mask. Objects smaller than this size will be
+        removed. Defaults to 1000.
+
+    Returns:
+        np.ndarray: A 3D binary mask that has been downsampled,
+        cleaned of small objects, had holes filled, and further
+        remove small objects through morphological opening.
     """
     # downsample the mask
     downsampled_mask = mask[::d_sample, ::d_sample, ::d_sample]
@@ -61,8 +78,9 @@ def segment_rocks(mask: np.ndarray, d_sample: int = 4, connectivity: int = 2,
 def get_nhood(connectivity):
     """
     Returns the requested 3D connectivity neighbourhood.
-    Parameters:
-    - selection: 1, 2, or 3
+
+    Args:
+        Parameters: selection: 1, 2, or 3
     """
     if connectivity == 1:
         nhood = np.zeros((3, 3, 3), dtype=int)

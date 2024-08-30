@@ -1,17 +1,36 @@
+# Peiyi Leng; edsml-pl1023
 import numpy as np
 import cv2
 from scipy.ndimage import binary_fill_holes
 
 
 def remove_cylinder(img, ring_rad, ring_frac):
-    """_summary_
+    """
+    Remove cylindrical artifacts from a thresholded binary 3D image.
+
+    This function detects and removes cylindrical structures from a 3D binary
+    image by identifying and masking circular regions in each 2D slice along
+    the z-axis. The circular regions are defined based on a given inner radius
+    and a ratio between the outer and inner radius. The function computes the
+    position of the cylindrical structure across multiple slices and
+    interpolates the cylinder's center throughout the image stack.
 
     Args:
-        img (array): A thresholded binary 3D image; note: this image
-                     directly after thresholding may be ndtype: bool
-        ring_rad: inner radius of circle of any 3D image
-                  slice at z direction (in pixels)
-        ring_frac: ratio between the outer radius and inner radius
+        img (numpy.ndarray): A thresholded binary 3D image. This image
+            should be a boolean array (`ndtype: bool`) directly after
+            thresholding.
+        ring_rad (int): The inner radius of the cylindrical structure
+            in pixels, applicable to any 2D slice in the z-direction.
+        ring_frac (float): The ratio between the outer radius and the
+            inner radius of the cylindrical structure.
+
+    Returns:
+        numpy.ndarray: The input 3D image with the cylindrical
+        artifacts removed.
+
+    Raises:
+        ValueError: If a circle is not found or multiple circles are detected
+        in any sampled slice.
     """
     img = np.copy(img)
     inner_radius = ring_rad
@@ -75,16 +94,35 @@ def remove_cylinder(img, ring_rad, ring_frac):
 
 
 def detect_ring(slice, inner_radius, outer_radius):
-    """_summary_
+    """
+    Detect a circular ring in a thresholded binary 2D image slice using the
+    Hough Circle Transform.
+
+    This function processes a 2D binary image slice to detect a circular ring
+    based on the specified inner and outer radius. It uses the Hough Circle
+    Transform to identify the circle that best fits the defined criteria.
 
     Args:
-        slice (_type_): A thresholded binary 2D image
-        inner_radius (_type_):
-        outer_radius (integer): _description_
+        slice (numpy.ndarray): A thresholded binary 2D image slice (typically
+                               `ndtype: bool`).
+        inner_radius (int): The minimum radius of the circle to detect, in
+                            pixels.
+        outer_radius (int): The maximum radius of the circle to detect, in
+                            pixels.
 
-    Return:
-        pos (1d array with 2 elements): center of the detected
-                                           circle at the slice
+    Returns:
+        tuple: A tuple containing:
+            - pos (numpy.ndarray): A 1D array with 2 elements representing the
+                                   center (x, y) of the detected circle. If no
+                                   circle is found, returns `[-1, -1]`. If
+                                   multiple circles are found, returns `[-2, -2]`.
+            - radius (int): The radius of the detected circle. Returns `-1` if
+                            no circle is found. Returns `-2` if multiple
+                            circles are found.
+
+    Raises:
+        None: This function handles errors internally by returning special
+              values in `pos` and `radius`.
     """
     slice_fill = binary_fill_holes(slice).astype(np.uint8) * 255
 

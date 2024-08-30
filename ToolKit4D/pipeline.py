@@ -1,3 +1,4 @@
+# Peiyi Leng; edsml-pl1023
 import ToolKit4D.dataio as dio
 import ToolKit4D.thresholding as thresh
 import ToolKit4D.utils as ut
@@ -12,29 +13,82 @@ import torch
 from typing import Literal
 from ToolKit4D.mlTools.model import CompactUNet3D
 
-# 1. write the basic structure
-# 2. add clean ram inside class and compare the saving of ram
-# 3. add lines to write intermediate result into disk
-# 4. call one functoin to execute all previous function
-# 5. pay attension: some function will change the variable inside
-#    - so for those i want to keep; pass copy to function
-# 6. add option to load disk data stored at (3) to each funciton
+# 1. call one functoin to execute all previous function
+# 2. add option to load disk data stored at to each funciton
 #    - so no need to run 'previous' function again
-#    - but increase time for loading data
-# 7. To avoid executing multiple times when execute previous methods;
+# 3. To avoid executing multiple times when execute previous methods;
 #    use hasattr(self, 'property')
 #    - if call at once; default parameter
 #    - if call separatly: user parameter can set
 
 
 class ToolKitPipeline:
-    """_summary_: processing per image per instance
+    """
+    A pipeline for processing 3D rock images, including thresholding, cylinder
+    removal, rock segmentation, agglomerate separation, and grain thresholding.
+
+    This class provides methods to process a raw 3D rock image through a series
+    of steps, including thresholding, cylinder removal, segmentation, and grain
+    extraction. The results of each step can be saved, and previously saved
+    results can be loaded to continue processing without repeating earlier
+    steps.
+
+    Args:
+        rawfile (str): The file path to the raw 3D image file.
+        load (bool, optional): If True, loads previously saved processing
+                               results from disk. Defaults to False.
+
+    Attributes:
+        rawfile (str): The file path to the raw 3D image file.
+        identifier (str): A unique identifier for the dataset, derived from the
+                          raw file name.
+        im_size (list): The dimensions of the 3D image.
+        im_type (str): The data type of the image (e.g., uint16).
+        raw (numpy.ndarray): The raw 3D image data.
+        image_folder (str): Directory path to save image-related outputs.
+        threshold_folder (str): Directory path to save threshold-related
+        outputs.
+
+    Methods:
+        initialize(): Resets all attributes except those defined in __init__.
+        _load_saved_files(): Loads all saved files into corresponding
+        attributes.
+        _read_raw(): Reads the raw image data from the file.
+        threshold_rock(save=False): Finds and applies a threshold to the rock
+                                     image.
+        remove_cylinder(ring_rad=792, ring_frac=1.2, del_attr=False,
+                        save=False):
+            Removes a cylindrical artifact from the image.
+        segment_rocks(remove_cylinder=True, min_obj_size=1000, del_attr=False,
+                      save=False): Segments the rocks in the image.
+        separate_rocks(suppress_percentage=10, min_obj_size=1000, ML=False,
+                       del_attr=False, save=False, num_agglomerates=None):
+            Separates the rocks into agglomerates.
+        agglomerate_extraction(min_obj_size=1000, del_attr=False, save=False):
+            Extracts individual agglomerates from the segmented rocks.
+        threshold_grain(method, del_attr=False, save=False): Thresholds the
+                                                             grains within
+                                                             each agglomerate
+                                                             using a specified
+                                                             method.
     """
     def __init__(self, rawfile, load: bool = False):
-        """_summary_
+        """
+        Initialize the ToolKitPipeline with a raw 3D image file.
+
+        This constructor sets up the necessary attributes for processing a raw
+        3D image file, including extracting metadata from the file name,
+        reading the image data, and creating directories for saving processing
+        results. If `load` is set to True, it will also load previously saved
+        processing files into the instance.
 
         Args:
-            rawfile_path (_type_): complete path to raw file
+            rawfile (str): The file path to the raw 3D image file. The file
+                           name should follow a specific format to extract
+                           relevant metadata (e.g., image size and type).
+            load (bool, optional): If True, loads previously saved processing
+                                   results from disk into the instance.
+                                   Defaults to False.
         """
         self.rawfile = rawfile
         clean_path = os.path.basename(rawfile)
@@ -58,21 +112,57 @@ class ToolKitPipeline:
         if load:
             self._load_saved_files()
 
-    def initialize(self):
+    def initialize(self, delete_attrs=None):
         """
-        Removes all attributes of the instance except those defined
-        in __init__. Used when you want to try other methods parameters
-        but no need to reload raw image.
+        Re-initialize the instance by deleting specified attributes or all
+        attributes except those required for the initial setup.
+
+        This method can be used to clear out attributes from the instance,
+        either based on a provided list (`delete_attrs`) or by removing all
+        attributes that are not essential for the initial state.
+
+        Args:
+            delete_attrs (list, optional): A list of attribute names to delete
+                                           from the instance. If not provided,
+                                           all attributes except the initial
+                                           setup attributes will be deleted.
         """
         init_attrs = {'rawfile', 'identifier', 'im_size', 'im_type', 'raw',
                       'image_folder', 'threshold_folder'}
         attrs = set(self.__dict__.keys())
-        for attr in attrs - init_attrs:
-            delattr(self, attr)
+        # If delete_attrs is provided, delete those attributes
+        if delete_attrs:
+            for attr in delete_attrs:
+                if attr in attrs:
+                    delattr(self, attr)
+        else:
+            for attr in attrs - init_attrs:
+                delattr(self, attr)
         gc.collect()
 
     def _load_saved_files(self):
-        """Load all saved files into corresponding attributes"""
+        """
+        Load all previously saved files into corresponding attributes.
+
+        This method checks for the existence of saved files related to the
+        current instance and loads them into the corresponding attributes.
+        It includes rock threshold masks, column masks, optimized rock masks,
+        agglomerate masks, fragments, and grain thresholds.
+
+        Attributes Loaded:
+            - rock_thresh_mask: The binary mask after rock thresholding.
+            - rock_thresh: The threshold value used for rock segmentation.
+            - column_mask: The binary mask representing the column after
+                           cylinder removal.
+            - optimized_rock_mask: The binary mask representing segmented
+                                   rocks.
+            - agglomerate_masks: A list of binary masks for separated
+                                 agglomerates.
+            - frags: A list of binary masks for individual fragments.
+            - grain_threshs: A list of threshold values used for grain
+                             segmentation.
+            - grain_thresh_masks: A list of binary masks for segmented grains.
+        """
         # Load rock_thresh_mask and rock_thresh
         rock_thresh_mask_path = os.path.join(self.image_folder,
                                              self.identifier +
@@ -158,20 +248,33 @@ class ToolKitPipeline:
             self.grain_thresh_masks = grain_thresh_masks
 
     def _read_raw(self):
-        """_summary_
+        """
+        Read the raw 3D image data from the file by calling
+        dio.read_raw function.
+
+        This method reads the raw image data using the specified image size and
+        type, as determined from the file name.
 
         Returns:
-            _type_: _description_
+            numpy.ndarray: The raw 3D image data.
         """
         raw = dio.read_raw(self.rawfile, self.im_size, self.im_type)
         return raw
 
     def threshold_rock(self, save: bool = False):
-        """_summary_
+        """
+        Find and apply a threshold to the rock image using the threshold_rock
+        function.
+
+        This method calculates the threshold for the rock image using the
+        `thresh.threshold_rock` function and applies it to create a binary
+        mask. If the threshold has not already been calculated, it will be
+        computed and stored. The resulting threshold value and mask can be
+        optionally saved to disk.
 
         Args:
-            del_attr (bool, optional): _description_. Defaults to False.
-            save (bool, optional): _description_. Defaults to False.
+            save (bool, optional): If True, saves the threshold value and the
+                                   thresholded mask to disk. Defaults to False.
         """
         if not hasattr(self, 'rock_thresh'):
             print('-----Finding Rock Threshold-----')
@@ -190,13 +293,27 @@ class ToolKitPipeline:
 
     def remove_cylinder(self, ring_rad: int = 792, ring_frac: float = 1.2,
                         del_attr: bool = False, save: bool = False):
-        """_summary_
+        """
+        Remove cylindrical artifacts from the rock image using the
+        remove_cylinder function.
+
+        This method removes cylindrical artifacts from the binary rock mask
+        created during thresholding. It first ensures the rock mask is
+        generated using `threshold_rock()` and then applies the
+        `ut.remove_cylinder` function to remove the cylinder. The result is
+        stored as a column mask, which can be optionally saved. If specified,
+        the rock threshold attribute can be deleted after processing.
 
         Args:
-            ring_rad (int, optional): _description_. Defaults to 99.
-            ring_frac (float, optional): _description_. Defaults to 1.5.
-            del_attr (bool, optional): _description_. Defaults to False.
-            save (bool, optional): _description_. Defaults to False.
+            ring_rad (int, optional): The inner radius of the cylinder to
+                                      remove. Defaults to 792.
+            ring_frac (float, optional): The ratio of the outer radius to the
+                                         inner radius. Defaults to 1.2.
+            del_attr (bool, optional): If True, deletes the rock threshold
+                                       attribute after processing. Defaults to
+                                       False.
+            save (bool, optional): If True, saves the column mask to disk.
+                                   Defaults to False.
         """
         if not hasattr(self, 'column_mask'):
             self.threshold_rock()
@@ -217,14 +334,26 @@ class ToolKitPipeline:
                       min_obj_size: int = 1000, del_attr: bool = False,
                       save: bool = False):
         """
-        different from Matlab code; Matlab: downsample from raw then
-        thershold and remove; Here: threshold and remove then downsample
+        Segment rocks in the 3D image by optionally removing the cylinder and
+        then applying segmentation.
+
+        This method segments the rocks in the 3D image. It first optionally
+        removes the cylindrical artifact using `remove_cylinder()`, and then
+        applies the `st.segment_rocks` function to segment the rocks. The
+        resulting segmented rock mask is stored and can be optionally saved.
+        Attributes used during processing can be deleted if specified.
 
         Args:
-            remove_cylinder (bool, optional): _description_. Defaults to True.
-            min_obj_size (int, optional): _description_. Defaults to 2.
-            del_attr (bool, optional): _description_. Defaults to False.
-            save (bool, optional): _description_. Defaults to False.
+            remove_cylinder (bool, optional): If True, removes the cylinder
+                                              before segmentation. Defaults to
+                                              True.
+            min_obj_size (int, optional): The minimum object size for rocks
+                                          to be considered during segmentation.
+                                          Defaults to 1000.
+            del_attr (bool, optional): If True, deletes intermediate attributes
+                                       after processing. Defaults to False.
+            save (bool, optional): If True, saves the segmented rock mask to
+                                   disk. Defaults to False.
         """
         if not hasattr(self, 'optimized_rock_mask'):
             if remove_cylinder:
@@ -254,12 +383,38 @@ class ToolKitPipeline:
                        min_obj_size: int = 1000, ML: bool = False,
                        del_attr: bool = False, save: bool = False,
                        num_agglomerates=None):
-        """_summary_
+        """
+        Separate rocks into individual agglomerates using different methods
+        based on specified parameters.
+
+        This method separates rocks into individual agglomerates after
+        segmentation. It can use different approaches depending on the
+        parameters:
+        - A binary search for a specified number of agglomerates.
+        - A machine learning-based method using a pre-trained model.
+        - A standard suppression-based separation method.
+
+        The resulting agglomerate masks can be optionally saved, and
+        intermediate attributes can be deleted if specified.
 
         Args:
-            suppress_percentage (int, optional): _description_. Defaults to 10.
-            del_attr (bool, optional): _description_. Defaults to False.
-            save (bool, optional): _description_. Defaults to False.
+            suppress_percentage (int, optional): The percentage used to
+                                                 suppress shallow minima
+                                                 during agglomerate separation.
+                                                 Defaults to 10.
+            min_obj_size (int, optional): The minimum object size for
+                                          agglomerates to be considered.
+                                          Defaults to 1000.
+            ML (bool, optional): If True, uses a machine learning-based method
+                                 for agglomerate separation. Defaults to False.
+            del_attr (bool, optional): If True, deletes intermediate attributes
+                                       after processing. Defaults to False.
+            save (bool, optional): If True, saves the agglomerate masks to
+                                   disk. Defaults to False.
+            num_agglomerates (int, optional): The desired number of
+                                              agglomerates to find. If
+                                              provided, a binary search
+                                              method will be used.
         """
         self.segment_rocks()
         if not hasattr(self, 'agglomerate_masks'):
@@ -298,12 +453,24 @@ class ToolKitPipeline:
 
     def agglomerate_extraction(self, min_obj_size: int = 1000,
                                del_attr: bool = False, save: bool = False):
-        """_summary_
+        """
+        Extract individual agglomerates from the segmented rocks.
+
+        This method extracts individual agglomerates from the segmented rocks
+        by applying the `st.agglomerate_extraction` function. It iterates over
+        the agglomerate masks generated by `separate_rocks()` and extracts the
+        fragments corresponding to each agglomerate. The extracted fragments
+        can be optionally saved, and intermediate attributes can be deleted if
+        specified.
 
         Args:
-            min_obj_size (int, optional): _description_. Defaults to 2.
-            del_attr (bool, optional): _description_. Defaults to False.
-            save (bool, optional): _description_. Defaults to False.
+            min_obj_size (int, optional): The minimum object size for fragments
+                                          to be considered during extraction.
+                                          Defaults to 1000.
+            del_attr (bool, optional): If True, deletes intermediate attributes
+                                       after processing. Defaults to False.
+            save (bool, optional): If True, saves the extracted fragments to
+                                   disk. Defaults to False.
         """
         self.separate_rocks()
         if not hasattr(self, 'frags'):
@@ -322,14 +489,23 @@ class ToolKitPipeline:
 
     def threshold_grain(self, method: Literal['entropy', 'moments'],
                         del_attr: bool = False, save: bool = False):
-        """_summary_
+        """
+        Apply a grain thresholding method to the extracted agglomerates.
+
+        This method thresholds the grains within each extracted agglomerate
+        using the specified method (`entropy` or `moments`). It computes the
+        threshold for each fragment and applies it to create binary masks
+        representing different grain phases. The results can be optionally
+        saved, and intermediate attributes can be deleted if specified.
 
         Args:
-            method (str): either 'entropy' or 'moments'
-            del_attr (bool, optional): _description_. delete attributes
-            not used in this and the following functions
-            Defaults to False.
-            save (bool, optional): _description_. Defaults to False.
+            method (str): The method to use for grain thresholding, either
+                          'entropy' or 'moments'.
+            del_attr (bool, optional): If True, deletes attributes not used in
+                                       this and subsequent functions.
+                                       Defaults to False.
+            save (bool, optional): If True, saves the computed grain thresholds
+                                   and masks to disk. Defaults to False.
         """
         self.agglomerate_extraction()
         if not hasattr(self, 'grain_threshs'):

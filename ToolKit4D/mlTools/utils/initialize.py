@@ -1,3 +1,4 @@
+# Peiyi Leng; edsml-pl1023
 import torch
 import random
 import numpy as np
@@ -5,7 +6,19 @@ import numpy as np
 
 def set_seed(seed):
     """
-    Use this to set ALL the random seeds to a fixed value and take out any randomness from cuda kernels
+    Set the seed for all relevant random number generators to ensure
+    reproducibility.
+
+    This function sets the seed for Python's `random` module, NumPy, and
+    PyTorch to ensure consistent and reproducible results across different
+    runs. It also configures PyTorch's CUDA settings to avoid non-deterministic
+    behavior.
+
+    Args:
+        seed (int): The seed value to use for all random number generators.
+
+    Returns:
+        bool: Returns `True` after the seed has been set successfully.
     """
     random.seed(seed)
     np.random.seed(seed)
