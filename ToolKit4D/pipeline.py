@@ -379,8 +379,9 @@ class ToolKitPipeline:
                                  '_optimized_rock_mask.tif',
                                  self.optimized_rock_mask)
 
-    def separate_rocks(self, suppress_percentage: int = 10,
-                       min_obj_size: int = 1000, ML: bool = False,
+    def separate_rocks(self, model_path='../model/compact_bs32_epoch25_p.pth',
+                       suppress_percentage: int = 10,
+                       min_obj_size: int = 1000, ML: bool = True,
                        del_attr: bool = False, save: bool = False,
                        num_agglomerates=None):
         """
@@ -398,6 +399,7 @@ class ToolKitPipeline:
         intermediate attributes can be deleted if specified.
 
         Args:
+            model_path: the path to the well trained 3D U-Net model
             suppress_percentage (int, optional): The percentage used to
                                                  suppress shallow minima
                                                  during agglomerate separation.
@@ -431,7 +433,7 @@ class ToolKitPipeline:
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore")
                     model.load_state_dict(
-                        torch.load('./model/compact_bs32_epoch25_p.pth',
+                        torch.load(model_path,
                                    map_location=torch.device('cpu')))
                 print('\t -- model loaded successfully')
                 guess = 5
