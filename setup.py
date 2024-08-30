@@ -13,5 +13,5 @@ setup(
     author='Peiyi Leng',  # Replace with your name
     # author_email='your.email@example.com',  # Replace with your email
     # url='https://github.com/yourusername/your-repo',  # Replace with your URL
-    python_requires='>=3.6',  # Specify the Python version compatibility
+    python_requires='==3.10',
 )
