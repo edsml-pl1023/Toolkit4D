@@ -1,0 +1,9 @@
+numpy
+tifffile
+scikit-image
+scipy
+opencv-python
+torch
+napari
+livelossplot
+PySide2
